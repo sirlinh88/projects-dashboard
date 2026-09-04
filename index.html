@@ -1,0 +1,453 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bảng Quản Trị Repository - E:\App AI</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151e32;
+      --card-border: #233354;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --accent: #818cf8;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); line-height: 1.6; padding: 24px 32px; min-height: 100vh; }
+    
+    header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+      padding-bottom: 20px; border-bottom: 1px solid var(--card-border); flex-wrap: wrap; gap: 16px;
+    }
+    .header-title h1 { font-size: 26px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .header-title p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+    
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .sync-status {
+      display: flex; align-items: center; gap: 8px; font-size: 13px; color: #a5b4fc;
+      background: #1e1b4b; border: 1px solid #4338ca; padding: 6px 14px; border-radius: 9999px;
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; background: #34d399; border-radius: 50%;
+      box-shadow: 0 0 8px #34d399; animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+
+    .btn-refresh {
+      background: #1e293b; border: 1px solid var(--card-border); color: #fff;
+      padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500;
+      display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .btn-refresh:hover { background: #334155; border-color: var(--primary); }
+
+    /* Stat Cards */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 18px;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .stat-label { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-val { font-size: 30px; font-weight: 700; margin-top: 6px; color: #fff; }
+    .stat-desc { font-size: 12px; margin-top: 4px; color: var(--primary); }
+
+    /* Control Bar */
+    .controls {
+      display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;
+      margin-bottom: 20px;
+    }
+    .filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tab-btn {
+      background: #151e32; border: 1px solid var(--card-border); color: var(--text-muted);
+      padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { background: #1e293b; color: #fff; }
+    .tab-btn.active { background: var(--primary-dark); color: #fff; border-color: var(--primary); }
+
+    .search-input {
+      background: #151e32; border: 1px solid var(--card-border); color: #fff;
+      padding: 8px 16px; border-radius: 8px; font-size: 14px; width: 300px; outline: none;
+    }
+    .search-input:focus { border-color: var(--primary); }
+
+    /* Projects Grid */
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+    .proj-card {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
+      padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s; position: relative;
+    }
+    .proj-card:hover { transform: translateY(-3px); border-color: #475569; }
+    
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .repo-name { font-size: 18px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+    .badge {
+      font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;
+    }
+    .badge-p0 { background: rgba(248, 113, 113, 0.2); color: #f87171; border: 1px solid #ef4444; }
+    .badge-p1 { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+    .badge-p2 { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #0284c7; }
+    .badge-p3 { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid #64748b; }
+    
+    .repo-desc { font-size: 13.5px; color: #cbd5e1; margin-bottom: 14px; min-height: 40px; }
+
+    /* Progress Bar */
+    .progress-box { margin-bottom: 14px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .progress-bar { height: 8px; background: #233354; border-radius: 9999px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 9999px; background: linear-gradient(90deg, #38bdf8, #818cf8); transition: width 0.4s ease; }
+
+    /* Tags & Details */
+    .tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .tag { background: #0b0f19; border: 1px solid #233354; color: #94a3b8; padding: 3px 8px; border-radius: 5px; font-size: 12px; }
+
+    .meta-box {
+      background: #0b0f19; border-radius: 8px; padding: 12px; font-size: 12.5px; margin-bottom: 14px;
+      border: 1px solid #1e293b;
+    }
+    .meta-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .meta-item:last-child { margin-bottom: 0; }
+    .meta-key { color: var(--text-muted); }
+    .meta-val { font-weight: 500; }
+    
+    .blocker-box {
+      background: rgba(248, 113, 113, 0.08); border-left: 3px solid #f87171;
+      padding: 8px 12px; font-size: 12.5px; color: #fca5a5; margin-bottom: 10px; border-radius: 0 6px 6px 0;
+    }
+    .blocker-box strong { color: #f87171; }
+
+    .action-box {
+      background: rgba(56, 189, 248, 0.08); border-left: 3px solid #38bdf8;
+      padding: 8px 12px; font-size: 12.5px; color: #bae6fd; margin-bottom: 14px; border-radius: 0 6px 6px 0;
+    }
+
+    .btn-quickstart {
+      background: #1e293b; color: #f8fafc; border: 1px solid #334155; border-radius: 8px;
+      padding: 8px 12px; font-size: 12px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 6px; width: 100%; transition: all 0.2s; font-family: monospace;
+    }
+    .btn-quickstart:hover { background: #334155; border-color: var(--primary); }
+
+    /* Toast Notification */
+    #toast {
+      visibility: hidden; min-width: 240px; background-color: #0284c7; color: #fff;
+      text-align: center; border-radius: 8px; padding: 12px 18px; position: fixed;
+      z-index: 100; right: 30px; bottom: 30px; font-size: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    }
+    #toast.show { visibility: visible; animation: fadein 0.3s, fadeout 0.3s 2.5s; }
+    @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+    @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+
+    /* Live Hook Banner */
+    .hook-banner {
+      background: linear-gradient(90deg, #1e1b4b, #172554); border: 1px solid #3b82f6;
+      border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex;
+      justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .hook-banner-text h3 { font-size: 15px; font-weight: 600; color: #93c5fd; }
+    .hook-banner-text p { font-size: 13px; color: #cbd5e1; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <div id="toast">Đã copy lệnh vào bộ nhớ tạm!</div>
+
+  <header>
+    <div class="header-title">
+      <h1>🚀 Bảng Quản Trị Hệ Sinh Thái Repositories</h1>
+      <p>Thư mục gốc: <code>E:\App AI</code> | Trợ lý Antigravity duy trì tự động</p>
+    </div>
+    <div class="header-actions">
+      <div class="sync-status">
+        <span class="pulse-dot"></span>
+        <span id="scanTimeText">Đang tải dữ liệu...</span>
+      </div>
+      <button class="btn-refresh" onclick="refreshData(true)">🔄 Quét lại ngay</button>
+      <button class="btn-refresh" style="background:#1e1b4b; border-color:#4338ca; color:#a5b4fc;" onclick="openLanModal()">📱 Mở trên điện thoại / LAN</button>
+    </div>
+  </header>
+
+  <!-- Git Hook Banner -->
+  <div class="hook-banner">
+    <div class="hook-banner-text">
+      <h3>⚡ Tự Động Cập Nhật Thời Gian Thực Qua Git Hooks</h3>
+      <p>Mỗi khi bạn chạy <code>git pull</code>, <code>git commit</code>, hoặc <code>git push</code> ở bất kỳ repo nào, Git hook sẽ tự động cập nhật số liệu lên trang này!</p>
+    </div>
+    <div style="font-size: 13px; color: #34d399; font-weight: 600; background: rgba(52, 211, 153, 0.1); border: 1px solid #34d399; padding: 6px 12px; border-radius: 6px;">
+      ✅ Git Hooks Đã Kích Hoạt
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Tổng Số Dự Án</div>
+      <div class="stat-val" id="statTotal">11</div>
+      <div class="stat-desc">Thư mục trong E:\App AI</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Đang Hoạt Động (Active)</div>
+      <div class="stat-val" id="statActive" style="color: #38bdf8;">6</div>
+      <div class="stat-desc">Code base hoàn chỉnh & chạy được</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Cần Xử Lý Git</div>
+      <div class="stat-val" id="statGitAlert" style="color: #fbbf24;">2</div>
+      <div class="stat-desc">Có uncommitted hoặc sau remote</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Tiến Độ Trung Bình (Active)</div>
+      <div class="stat-val" id="statAvgProgress" style="color: #34d399;">76%</div>
+      <div class="stat-desc">Giai đoạn hoàn thiện & tích hợp</div>
+    </div>
+  </div>
+
+  <!-- Controls & Filters -->
+  <div class="controls">
+    <div class="filter-tabs">
+      <button class="tab-btn active" onclick="filterCards('all')">Tất cả (<span id="countAll">11</span>)</button>
+      <button class="tab-btn" onclick="filterCards('active')">Đang phát triển (<span id="countActive">6</span>)</button>
+      <button class="tab-btn" onclick="filterCards('p0p1')">Ưu tiên cao P0/P1 (<span id="countP0P1">4</span>)</button>
+      <button class="tab-btn" onclick="filterCards('git')">Cần xử lý Git (<span id="countGit">2</span>)</button>
+      <button class="tab-btn" onclick="filterCards('stubs')">Ý tưởng / Dọn dẹp</button>
+    </div>
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm kiếm repository, công nghệ..." onkeyup="searchProjects()" />
+  </div>
+
+  <!-- Projects Grid -->
+  <div class="projects-grid" id="projectsGrid"></div>
+
+  <!-- Dynamic Data Loader -->
+  <script src="projects_data.js"></script>
+
+  <script>
+    let currentFilter = 'all';
+
+    function getPriorityBadge(p) {
+      if (p === 'P0') return '<span class="badge badge-p0">Ưu tiên P0</span>';
+      if (p === 'P1') return '<span class="badge badge-p1">Ưu tiên P1</span>';
+      if (p === 'P2') return '<span class="badge badge-p2">Ưu tiên P2</span>';
+      if (p === 'Ý tưởng') return '<span class="badge badge-p3">Ý tưởng</span>';
+      if (p === 'Dọn dẹp') return '<span class="badge badge-p3" style="border-color:#64748b;">Dọn dẹp</span>';
+      return '<span class="badge badge-p3">Ưu tiên ' + p + '</span>';
+    }
+
+    function renderDashboard() {
+      const data = window.PROJECTS_DATA || [];
+      const container = document.getElementById('projectsGrid');
+      container.innerHTML = '';
+
+      if (window.LAST_SCAN) {
+        document.getElementById('scanTimeText').innerText = 'Đồng bộ lúc: ' + window.LAST_SCAN;
+      }
+
+      // Stats
+      let total = data.length;
+      let activeCount = 0;
+      let gitAlertCount = 0;
+      let progressSum = 0;
+      let p0p1Count = 0;
+
+      data.forEach(item => {
+        const isActive = item.Category && item.Category.includes('active');
+        const hasGitAlert = (item.Uncommitted > 0) || (item.RemoteSync && (item.RemoteSync.includes('Behind') || item.RemoteSync.includes('Ahead')));
+        const isP0P1 = (item.Priority === 'P0' || item.Priority === 'P1');
+
+        if (isActive) {
+          activeCount++;
+          progressSum += (item.Progress || 0);
+        }
+        if (hasGitAlert) gitAlertCount++;
+        if (isP0P1) p0p1Count++;
+
+        // Card HTML
+        const card = document.createElement('div');
+        card.className = 'proj-card';
+        card.setAttribute('data-category', item.Category || 'stubs');
+        
+        let techText = Array.isArray(item.Tech) ? item.Tech.join(' ') : (item.Tech || '');
+        card.setAttribute('data-name', (item.Name + ' ' + item.Desc + ' ' + techText).toLowerCase());
+
+        let techTags = '';
+        if (Array.isArray(item.Tech)) {
+          techTags = item.Tech.map(t => `<span class="tag">${t}</span>`).join('');
+        } else if (item.Tech) {
+          techTags = `<span class="tag">${item.Tech}</span>`;
+        }
+
+        let gitHealthHtml = `<span class="meta-val" style="color: #34d399;">${item.Health}</span>`;
+        if (item.Uncommitted > 0) {
+          gitHealthHtml = `<span class="meta-val" style="color: #fbbf24;">⚠️ ${item.Uncommitted} file uncommitted</span>`;
+        } else if (item.RemoteSync && item.RemoteSync.includes('Behind')) {
+          gitHealthHtml = `<span class="meta-val" style="color: #f87171;">⚠️ Behind Remote</span>`;
+        }
+
+        let quickCmdHtml = '';
+        if (item.QuickCmd) {
+          quickCmdHtml = `<button class="btn-quickstart" onclick="copyCommand('${item.QuickCmd.replace(/'/g, "\\'")}')">📋 Copy: ${item.QuickCmd}</button>`;
+        }
+
+        card.innerHTML = `
+          <div>
+            <div class="card-top">
+              <span class="repo-name">${item.Name}</span>
+              ${getPriorityBadge(item.Priority)}
+            </div>
+            <p class="repo-desc">${item.Desc || ''}</p>
+            <div class="progress-box">
+              <div class="progress-label"><span>Tiến độ hoàn thiện</span><span>${item.Progress || 0}%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: ${item.Progress || 0}%;"></div></div>
+            </div>
+            <div class="tags-row">${techTags}</div>
+            <div class="meta-box">
+              <div class="meta-item"><span class="meta-key">Git Branch:</span><span class="meta-val" style="color: #38bdf8;">${item.Branch || 'N/A'}</span></div>
+              <div class="meta-item"><span class="meta-key">Git Health:</span>${gitHealthHtml}</div>
+              <div class="meta-item"><span class="meta-key">Commit gần nhất:</span><span class="meta-val">${item.LastCommit || 'N/A'}</span></div>
+            </div>
+            ${item.Blocker && item.Blocker !== 'Chưa có' && item.Blocker !== 'Trong.' ? `
+              <div class="blocker-box">
+                <strong>Điểm nghẽn:</strong> ${item.Blocker}
+              </div>` : ''}
+            ${item.Action ? `
+              <div class="action-box">
+                <strong>Việc tiếp theo:</strong> ${item.Action}
+              </div>` : ''}
+          </div>
+          ${quickCmdHtml}
+        `;
+        container.appendChild(card);
+      });
+
+      // Update counters
+      document.getElementById('statTotal').innerText = total;
+      document.getElementById('statActive').innerText = activeCount;
+      document.getElementById('statGitAlert').innerText = gitAlertCount;
+      document.getElementById('statAvgProgress').innerText = activeCount > 0 ? Math.round(progressSum / activeCount) + '%' : '0%';
+
+      document.getElementById('countAll').innerText = total;
+      document.getElementById('countActive').innerText = activeCount;
+      document.getElementById('countP0P1').innerText = p0p1Count;
+      document.getElementById('countGit').innerText = gitAlertCount;
+
+      filterCards(currentFilter);
+    }
+
+    function filterCards(category) {
+      currentFilter = category;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(`'${category}'`));
+      if (activeBtn) activeBtn.classList.add('active');
+      
+      const cards = document.querySelectorAll('.proj-card');
+      cards.forEach(card => {
+        const cat = card.getAttribute('data-category') || '';
+        if (category === 'all') {
+          card.style.display = 'flex';
+        } else if (category === 'git') {
+          card.style.display = cat.includes('git') ? 'flex' : 'none';
+        } else if (cat.includes(category)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function searchProjects() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const cards = document.querySelectorAll('.proj-card');
+      cards.forEach(card => {
+        const text = card.getAttribute('data-name');
+        if (text.includes(q)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function copyCommand(cmd) {
+      navigator.clipboard.writeText(cmd).then(() => {
+        const toast = document.getElementById('toast');
+        toast.innerText = 'Đã copy: ' + cmd;
+        toast.className = 'show';
+        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2800);
+      });
+    }
+
+    // Auto-poll for changes in projects_data.js every 4 seconds
+    function refreshData(isManual) {
+      const oldScript = document.getElementById('dynamicScript');
+      if (oldScript) oldScript.remove();
+
+      const script = document.createElement('script');
+      script.id = 'dynamicScript';
+      script.src = 'projects_data.js?t=' + new Date().getTime();
+      script.onload = () => {
+        renderDashboard();
+        if (isManual) {
+          const toast = document.getElementById('toast');
+          toast.innerText = 'Đã làm mới dữ liệu mới nhất!';
+          toast.className = 'show';
+          setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2000);
+        }
+      };
+      document.body.appendChild(script);
+    }
+
+    window.onload = () => {
+      renderDashboard();
+      setInterval(() => { refreshData(false); }, 4000);
+    };
+  </script>
+  <!-- Modal LAN / Remote Access -->
+  <div id="lanModal" style="display:none; position:fixed; z-index:200; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); justify-content:center; align-items:center;">
+    <div style="background:#151e32; border:1px solid #3b82f6; border-radius:16px; width:90%; max-width:540px; padding:24px; color:#fff; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+      <button onclick="closeLanModal()" style="position:absolute; right:16px; top:16px; background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✖</button>
+      <h2 style="font-size:20px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">📱 Liên Thông Mở Trên Nhiều Thiết Bị</h2>
+      <p style="font-size:13.5px; color:#cbd5e1; margin-bottom:18px;">Bạn có thể mở bảng điều khiển này từ bất kỳ đâu (Điện thoại, Laptop khác, ngoài văn phòng) theo các cách sau:</p>
+
+      <!-- Cách 1: Trong cùng mạng Wi-Fi/LAN -->
+      <div style="background:#0b0f19; border:1px solid #233354; border-radius:10px; padding:14px; margin-bottom:14px;">
+        <h4 style="color:#38bdf8; font-size:14px; margin-bottom:6px;">1. Trong cùng mạng Wi-Fi / Mạng nội bộ (LAN)</h4>
+        <p style="font-size:12.5px; color:#94a3b8; margin-bottom:8px;">Khởi chạy file <code>E:\App AI\start_dashboard_server.bat</code>, sau đó nhập địa chỉ:</p>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" readonly value="http://192.168.1.151:8088/projects_dashboard.html" id="lanUrlInput" style="flex:1; background:#1e293b; border:1px solid #334155; color:#34d399; font-weight:600; padding:8px 12px; border-radius:6px; font-size:13px; font-family:monospace;" />
+          <button onclick="copyLanUrl()" style="background:#0284c7; border:none; color:#fff; padding:8px 14px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:600;">Copy</button>
+        </div>
+        <div style="text-align:center; margin-top:12px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://192.168.1.151:8088/projects_dashboard.html" alt="QR Code" style="border-radius:8px; border:2px solid #334155; width:130px; height:130px;" />
+          <p style="font-size:11.5px; color:#64748b; margin-top:4px;">(Quét bằng camera điện thoại khi cùng Wi-Fi)</p>
+        </div>
+      </div>
+
+      <!-- Cách 2: Qua Internet -->
+      <div style="background:#0b0f19; border:1px solid #233354; border-radius:10px; padding:14px;">
+        <h4 style="color:#a5b4fc; font-size:14px; margin-bottom:6px;">2. Mở từ xa qua Internet (4G / Ở nhà / Đi công tác)</h4>
+        <p style="font-size:12.5px; color:#cbd5e1; margin-bottom:6px;"><b>Cách tốt nhất:</b> Dùng <b>Tailscale</b> (mạng riêng ảo bảo mật tối đa) hoặc <b>Cloudflare Tunnel</b> (miễn phí, có link HTTPS truy cập bất kỳ đâu).</p>
+        <p style="font-size:12px; color:#94a3b8;">Chỉ cần gõ lệnh: <code>cloudflared tunnel --url http://localhost:8088</code></p>
+      </div>
+    </div>
+  </div>
+<script>
+    function openLanModal() {
+      document.getElementById('lanModal').style.display = 'flex';
+    }
+    function closeLanModal() {
+      document.getElementById('lanModal').style.display = 'none';
+    }
+    function copyLanUrl() {
+      const url = document.getElementById('lanUrlInput').value;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Đã copy đường dẫn LAN: ' + url);
+      });
+    }
+</script>
+</body>
+</html>
