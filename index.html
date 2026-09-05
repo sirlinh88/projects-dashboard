@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
@@ -28,7 +28,7 @@
     .header-title h1 { font-size: 26px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
     .header-title p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
     
-    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .sync-status {
       display: flex; align-items: center; gap: 8px; font-size: 13px; color: #a5b4fc;
       background: #1e1b4b; border: 1px solid #4338ca; padding: 6px 14px; border-radius: 9999px;
@@ -77,7 +77,7 @@
     .search-input:focus { border-color: var(--primary); }
 
     /* Projects Grid */
-    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px; }
     .proj-card {
       background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
       padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
@@ -95,7 +95,7 @@
     .badge-p2 { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #0284c7; }
     .badge-p3 { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid #64748b; }
     
-    .repo-desc { font-size: 13.5px; color: #cbd5e1; margin-bottom: 14px; min-height: 40px; }
+    .repo-desc { font-size: 13.5px; color: #cbd5e1; margin-bottom: 14px; min-height: 38px; }
 
     /* Progress Bar */
     .progress-box { margin-bottom: 14px; }
@@ -115,7 +115,30 @@
     .meta-item:last-child { margin-bottom: 0; }
     .meta-key { color: var(--text-muted); }
     .meta-val { font-weight: 500; }
+
+    /* Detailed Changes Inspector */
+    .inspector-section { margin-bottom: 12px; }
+    .wip-box {
+      background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-bottom: 10px;
+    }
+    .wip-header { font-weight: 600; color: #fbbf24; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .file-list { list-style: none; margin-top: 4px; font-family: monospace; font-size: 11.5px; }
+    .file-list li { margin-bottom: 3px; display: flex; align-items: center; gap: 6px; color: #cbd5e1; }
     
+    .commit-box {
+      background: #0d1527; border: 1px solid #233354; border-radius: 8px; padding: 10px 12px;
+      font-size: 12px; margin-bottom: 10px;
+    }
+    .commit-header { font-weight: 600; color: #38bdf8; display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .commit-msg { color: #f1f5f9; font-weight: 500; font-size: 12.5px; margin-bottom: 4px; }
+    .commit-stat { color: #94a3b8; font-size: 11.5px; }
+
+    .accordion-toggle {
+      background: none; border: none; color: #818cf8; cursor: pointer; font-size: 11.5px;
+      padding: 0; margin-top: 4px; text-decoration: underline; display: inline-block;
+    }
+
     .blocker-box {
       background: rgba(248, 113, 113, 0.08); border-left: 3px solid #f87171;
       padding: 8px 12px; font-size: 12.5px; color: #fca5a5; margin-bottom: 10px; border-radius: 0 6px 6px 0;
@@ -160,7 +183,7 @@
 
   <header>
     <div class="header-title">
-      <h1>🚀 Bảng Quản Trị Hệ Sinh Thái Repositories</h1>
+      <h1>🚀 Bảng Quản Trị Repository - E:\App AI</h1>
       <p>Thư mục gốc: <code>E:\App AI</code> | Trợ lý Antigravity duy trì tự động</p>
     </div>
     <div class="header-actions">
@@ -168,7 +191,7 @@
         <span class="pulse-dot"></span>
         <span id="scanTimeText">Đang tải dữ liệu...</span>
       </div>
-      <button class="btn-refresh" onclick="refreshData(true)">🔄 Quét lại ngay</button>
+      <button class="btn-refresh" id="btnRefresh" onclick="triggerScan()">🔄 Quét lại ngay</button>
       <button class="btn-refresh" style="background:#1e1b4b; border-color:#4338ca; color:#a5b4fc;" onclick="openLanModal()">📱 Mở trên điện thoại / LAN</button>
     </div>
   </header>
@@ -176,11 +199,11 @@
   <!-- Git Hook Banner -->
   <div class="hook-banner">
     <div class="hook-banner-text">
-      <h3>⚡ Tự Động Cập Nhật Thời Gian Thực Qua Git Hooks</h3>
-      <p>Mỗi khi bạn chạy <code>git pull</code>, <code>git commit</code>, hoặc <code>git push</code> ở bất kỳ repo nào, Git hook sẽ tự động cập nhật số liệu lên trang này!</p>
+      <h3>⚡ Nhận Diện Tức Thì Từng File Đang Sửa & Lịch Sử Commit</h3>
+      <p>Hệ thống tự động phát hiện danh sách file bạn đang sửa dở, số dòng thay đổi, và chi tiết nội dung các commit mới nhất qua Git Hooks.</p>
     </div>
     <div style="font-size: 13px; color: #34d399; font-weight: 600; background: rgba(52, 211, 153, 0.1); border: 1px solid #34d399; padding: 6px 12px; border-radius: 6px;">
-      ✅ Git Hooks Đã Kích Hoạt
+      ✅ Git Change Inspector Kích Hoạt
     </div>
   </div>
 
@@ -217,11 +240,38 @@
       <button class="tab-btn" onclick="filterCards('git')">Cần xử lý Git (<span id="countGit">2</span>)</button>
       <button class="tab-btn" onclick="filterCards('stubs')">Ý tưởng / Dọn dẹp</button>
     </div>
-    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm kiếm repository, công nghệ..." onkeyup="searchProjects()" />
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm kiếm repository, file, công nghệ..." onkeyup="searchProjects()" />
   </div>
 
   <!-- Projects Grid -->
   <div class="projects-grid" id="projectsGrid"></div>
+
+  <!-- Modal LAN / Remote Access -->
+  <div id="lanModal" style="display:none; position:fixed; z-index:200; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); justify-content:center; align-items:center;">
+    <div style="background:#151e32; border:1px solid #3b82f6; border-radius:16px; width:90%; max-width:540px; padding:24px; color:#fff; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+      <button onclick="closeLanModal()" style="position:absolute; right:16px; top:16px; background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✖</button>
+      <h2 style="font-size:20px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">📱 Liên Thông Mở Trên Nhiều Thiết Bị</h2>
+      <p style="font-size:13.5px; color:#cbd5e1; margin-bottom:18px;">Bạn có thể mở bảng điều khiển này từ bất kỳ đâu (Điện thoại, Laptop khác, ngoài văn phòng) theo các cách sau:</p>
+
+      <div style="background:#0b0f19; border:1px solid #233354; border-radius:10px; padding:14px; margin-bottom:14px;">
+        <h4 style="color:#38bdf8; font-size:14px; margin-bottom:6px;">1. Trong cùng mạng Wi-Fi / Mạng nội bộ (LAN)</h4>
+        <p style="font-size:12.5px; color:#94a3b8; margin-bottom:8px;">Khởi chạy file <code>E:\App AI\start_dashboard_server.bat</code>, sau đó nhập địa chỉ:</p>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" readonly value="http://192.168.1.151:8088/projects_dashboard.html" id="lanUrlInput" style="flex:1; background:#1e293b; border:1px solid #334155; color:#34d399; font-weight:600; padding:8px 12px; border-radius:6px; font-size:13px; font-family:monospace;" />
+          <button onclick="copyLanUrl()" style="background:#0284c7; border:none; color:#fff; padding:8px 14px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:600;">Copy</button>
+        </div>
+        <div style="text-align:center; margin-top:12px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://192.168.1.151:8088/projects_dashboard.html" alt="QR Code" style="border-radius:8px; border:2px solid #334155; width:130px; height:130px;" />
+          <p style="font-size:11.5px; color:#64748b; margin-top:4px;">(Quét bằng camera điện thoại khi cùng Wi-Fi)</p>
+        </div>
+      </div>
+
+      <div style="background:#0b0f19; border:1px solid #233354; border-radius:10px; padding:14px;">
+        <h4 style="color:#a5b4fc; font-size:14px; margin-bottom:6px;">2. Xem trên Cloud 24/7 (GitHub Pages)</h4>
+        <p style="font-size:12.5px; color:#cbd5e1; margin-bottom:6px;">Chạy <code>.\push_to_cloud.ps1</code> để đẩy lên: <code>https://sirlinh88.github.io/projects-dashboard/</code></p>
+      </div>
+    </div>
+  </div>
 
   <!-- Dynamic Data Loader -->
   <script src="projects_data.js"></script>
@@ -244,7 +294,8 @@
       container.innerHTML = '';
 
       if (window.LAST_SCAN) {
-        document.getElementById('scanTimeText').innerText = 'Đồng bộ lúc: ' + window.LAST_SCAN;
+        let devStr = window.MACHINE_NAME ? ` (${window.MACHINE_NAME})` : '';
+        document.getElementById('scanTimeText').innerText = 'Đồng bộ: ' + window.LAST_SCAN + devStr;
       }
 
       // Stats
@@ -254,7 +305,7 @@
       let progressSum = 0;
       let p0p1Count = 0;
 
-      data.forEach(item => {
+      data.forEach((item, index) => {
         const isActive = item.Category && item.Category.includes('active');
         const hasGitAlert = (item.Uncommitted > 0) || (item.RemoteSync && (item.RemoteSync.includes('Behind') || item.RemoteSync.includes('Ahead')));
         const isP0P1 = (item.Priority === 'P0' || item.Priority === 'P1');
@@ -272,7 +323,8 @@
         card.setAttribute('data-category', item.Category || 'stubs');
         
         let techText = Array.isArray(item.Tech) ? item.Tech.join(' ') : (item.Tech || '');
-        card.setAttribute('data-name', (item.Name + ' ' + item.Desc + ' ' + techText).toLowerCase());
+        let uncommittedFilesText = Array.isArray(item.UncommittedFiles) ? item.UncommittedFiles.join(' ') : '';
+        card.setAttribute('data-name', (item.Name + ' ' + item.Desc + ' ' + techText + ' ' + uncommittedFilesText + ' ' + (item.LastCommitMsg || '')).toLowerCase());
 
         let techTags = '';
         if (Array.isArray(item.Tech)) {
@@ -283,9 +335,61 @@
 
         let gitHealthHtml = `<span class="meta-val" style="color: #34d399;">${item.Health}</span>`;
         if (item.Uncommitted > 0) {
-          gitHealthHtml = `<span class="meta-val" style="color: #fbbf24;">⚠️ ${item.Uncommitted} file uncommitted</span>`;
+          gitHealthHtml = `<span class="meta-val" style="color: #fbbf24;">⚠️ ${item.Uncommitted} file đang sửa</span>`;
         } else if (item.RemoteSync && item.RemoteSync.includes('Behind')) {
           gitHealthHtml = `<span class="meta-val" style="color: #f87171;">⚠️ Behind Remote</span>`;
+        }
+
+        // Section: Uncommitted Changes (Work in Progress)
+        let wipHtml = '';
+        if (item.Uncommitted > 0 && Array.isArray(item.UncommittedFiles) && item.UncommittedFiles.length > 0) {
+          let fileListItems = item.UncommittedFiles.map(f => {
+            let icon = '📝';
+            let color = '#fbbf24';
+            if (f.startsWith('??')) { icon = '➕'; color = '#34d399'; }
+            else if (f.startsWith('D')) { icon = '❌'; color = '#f87171'; }
+            return `<li><span>${icon}</span><span style="color:${color};">${f}</span></li>`;
+          }).join('');
+
+          let statNote = item.UncommittedStat ? `<div style="color:#94a3b8; font-size:11px; margin-top:4px;">📊 ${item.UncommittedStat}</div>` : '';
+
+          wipHtml = `
+            <div class="wip-box">
+              <div class="wip-header">
+                <span>⚡ Đang sửa dở (${item.Uncommitted} files):</span>
+              </div>
+              <ul class="file-list">${fileListItems}</ul>
+              ${statNote}
+            </div>
+          `;
+        }
+
+        // Section: Last Commit Details & Diff
+        let commitHtml = '';
+        if (item.LastCommitHash) {
+          let recentHistoryHtml = '';
+          if (Array.isArray(item.RecentCommits) && item.RecentCommits.length > 1) {
+            let historyItems = item.RecentCommits.map(c => `<li><span style="color:#38bdf8;">${c.Hash}</span> (${c.Time}): ${c.Msg}</li>`).join('');
+            recentHistoryHtml = `
+              <div id="history_${index}" style="display:none; margin-top:8px; border-top:1px dashed #233354; padding-top:6px;">
+                <div style="font-size:11px; color:#818cf8; margin-bottom:3px;">📜 3 Commit gần nhất:</div>
+                <ul class="file-list">${historyItems}</ul>
+              </div>
+              <button class="accordion-toggle" onclick="toggleHistory('history_${index}', this)">▼ Xem lịch sử commit</button>
+            `;
+          }
+
+          commitHtml = `
+            <div class="commit-box">
+              <div class="commit-header">
+                <span>🏷️ Commit gần nhất: <code style="color:#38bdf8;">${item.LastCommitHash}</code></span>
+                <span style="color:#94a3b8; font-size:11px;">${item.LastCommitDate || ''}</span>
+              </div>
+              <div class="commit-msg">💬 ${item.LastCommitMsg}</div>
+              ${item.LastCommitStat ? `<div class="commit-stat">📊 ${item.LastCommitStat}</div>` : ''}
+              ${recentHistoryHtml}
+            </div>
+          `;
         }
 
         let quickCmdHtml = '';
@@ -308,8 +412,13 @@
             <div class="meta-box">
               <div class="meta-item"><span class="meta-key">Git Branch:</span><span class="meta-val" style="color: #38bdf8;">${item.Branch || 'N/A'}</span></div>
               <div class="meta-item"><span class="meta-key">Git Health:</span>${gitHealthHtml}</div>
-              <div class="meta-item"><span class="meta-key">Commit gần nhất:</span><span class="meta-val">${item.LastCommit || 'N/A'}</span></div>
             </div>
+            
+            <div class="inspector-section">
+              ${wipHtml}
+              ${commitHtml}
+            </div>
+
             ${item.Blocker && item.Blocker !== 'Chưa có' && item.Blocker !== 'Trong.' ? `
               <div class="blocker-box">
                 <strong>Điểm nghẽn:</strong> ${item.Blocker}
@@ -336,6 +445,17 @@
       document.getElementById('countGit').innerText = gitAlertCount;
 
       filterCards(currentFilter);
+    }
+
+    function toggleHistory(elementId, btn) {
+      const el = document.getElementById(elementId);
+      if (el.style.display === 'none') {
+        el.style.display = 'block';
+        btn.innerText = '▲ Thu gọn lịch sử';
+      } else {
+        el.style.display = 'none';
+        btn.innerText = '▼ Xem lịch sử commit';
+      }
     }
 
     function filterCards(category) {
@@ -381,61 +501,6 @@
       });
     }
 
-    // Auto-poll for changes in projects_data.js every 4 seconds
-    function refreshData(isManual) {
-      const oldScript = document.getElementById('dynamicScript');
-      if (oldScript) oldScript.remove();
-
-      const script = document.createElement('script');
-      script.id = 'dynamicScript';
-      script.src = 'projects_data.js?t=' + new Date().getTime();
-      script.onload = () => {
-        renderDashboard();
-        if (isManual) {
-          const toast = document.getElementById('toast');
-          toast.innerText = 'Đã làm mới dữ liệu mới nhất!';
-          toast.className = 'show';
-          setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2000);
-        }
-      };
-      document.body.appendChild(script);
-    }
-
-    window.onload = () => {
-      renderDashboard();
-      setInterval(() => { refreshData(false); }, 4000);
-    };
-  </script>
-  <!-- Modal LAN / Remote Access -->
-  <div id="lanModal" style="display:none; position:fixed; z-index:200; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); justify-content:center; align-items:center;">
-    <div style="background:#151e32; border:1px solid #3b82f6; border-radius:16px; width:90%; max-width:540px; padding:24px; color:#fff; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
-      <button onclick="closeLanModal()" style="position:absolute; right:16px; top:16px; background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✖</button>
-      <h2 style="font-size:20px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">📱 Liên Thông Mở Trên Nhiều Thiết Bị</h2>
-      <p style="font-size:13.5px; color:#cbd5e1; margin-bottom:18px;">Bạn có thể mở bảng điều khiển này từ bất kỳ đâu (Điện thoại, Laptop khác, ngoài văn phòng) theo các cách sau:</p>
-
-      <!-- Cách 1: Trong cùng mạng Wi-Fi/LAN -->
-      <div style="background:#0b0f19; border:1px solid #233354; border-radius:10px; padding:14px; margin-bottom:14px;">
-        <h4 style="color:#38bdf8; font-size:14px; margin-bottom:6px;">1. Trong cùng mạng Wi-Fi / Mạng nội bộ (LAN)</h4>
-        <p style="font-size:12.5px; color:#94a3b8; margin-bottom:8px;">Khởi chạy file <code>E:\App AI\start_dashboard_server.bat</code>, sau đó nhập địa chỉ:</p>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <input type="text" readonly value="http://192.168.1.151:8088/projects_dashboard.html" id="lanUrlInput" style="flex:1; background:#1e293b; border:1px solid #334155; color:#34d399; font-weight:600; padding:8px 12px; border-radius:6px; font-size:13px; font-family:monospace;" />
-          <button onclick="copyLanUrl()" style="background:#0284c7; border:none; color:#fff; padding:8px 14px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:600;">Copy</button>
-        </div>
-        <div style="text-align:center; margin-top:12px;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://192.168.1.151:8088/projects_dashboard.html" alt="QR Code" style="border-radius:8px; border:2px solid #334155; width:130px; height:130px;" />
-          <p style="font-size:11.5px; color:#64748b; margin-top:4px;">(Quét bằng camera điện thoại khi cùng Wi-Fi)</p>
-        </div>
-      </div>
-
-      <!-- Cách 2: Qua Internet -->
-      <div style="background:#0b0f19; border:1px solid #233354; border-radius:10px; padding:14px;">
-        <h4 style="color:#a5b4fc; font-size:14px; margin-bottom:6px;">2. Mở từ xa qua Internet (4G / Ở nhà / Đi công tác)</h4>
-        <p style="font-size:12.5px; color:#cbd5e1; margin-bottom:6px;"><b>Cách tốt nhất:</b> Dùng <b>Tailscale</b> (mạng riêng ảo bảo mật tối đa) hoặc <b>Cloudflare Tunnel</b> (miễn phí, có link HTTPS truy cập bất kỳ đâu).</p>
-        <p style="font-size:12px; color:#94a3b8;">Chỉ cần gõ lệnh: <code>cloudflared tunnel --url http://localhost:8088</code></p>
-      </div>
-    </div>
-  </div>
-<script>
     function openLanModal() {
       document.getElementById('lanModal').style.display = 'flex';
     }
@@ -445,9 +510,120 @@
     function copyLanUrl() {
       const url = document.getElementById('lanUrlInput').value;
       navigator.clipboard.writeText(url).then(() => {
-        alert('Đã copy đường dẫn LAN: ' + url);
+        alert('Đã copy: ' + url);
       });
     }
-</script>
+
+    function showToast(msg, duration = 3000) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.innerText = msg;
+      toast.className = 'show';
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.className = toast.className.replace('show', '');
+      }, duration);
+    }
+
+    function loadScriptData() {
+      return new Promise((resolve) => {
+        const oldScript = document.getElementById('dynamicScript');
+        if (oldScript) oldScript.remove();
+
+        const script = document.createElement('script');
+        script.id = 'dynamicScript';
+        script.src = 'projects_data.js?t=' + new Date().getTime();
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+      });
+    }
+
+    let isScanning = false;
+    let prevLastScan = '';
+
+    // Trigger full Git scan via local dashboard server API
+    async function triggerScan() {
+      if (isScanning) return;
+      isScanning = true;
+
+      const btn = document.getElementById('btnRefresh');
+      const originalText = btn ? btn.innerHTML : '🔄 Quét lại ngay';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Đang quét Git...';
+        btn.style.opacity = '0.7';
+        btn.style.cursor = 'not-allowed';
+      }
+
+      showToast('⏳ Đang quét chi tiết Git toàn bộ kho code trong E:\\App AI...', 4000);
+
+      let scanUrl = '/api/scan';
+      if (window.location.protocol === 'file:' || !window.location.port) {
+        scanUrl = 'http://localhost:8088/api/scan';
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
+
+        const res = await fetch(scanUrl, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const result = await res.json();
+          await loadScriptData();
+          prevLastScan = window.LAST_SCAN || '';
+          renderDashboard();
+          showToast('✅ Đã quét và cập nhật trạng thái Git mới nhất!', 3000);
+        } else {
+          throw new Error('HTTP ' + res.status);
+        }
+      } catch (err) {
+        console.warn('Scan API not reachable or timeout:', err);
+        await loadScriptData();
+        if (window.LAST_SCAN !== prevLastScan) {
+          prevLastScan = window.LAST_SCAN || '';
+          renderDashboard();
+        }
+        showToast('⚠️ Không kết nối được API quét (Port 8088)! Hãy chạy start_dashboard_server.bat hoặc nhấp đúp file scan_now.bat tại E:\\App AI để quét.', 6000);
+      } finally {
+        isScanning = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+        }
+      }
+    }
+
+    function refreshData(isManual) {
+      if (isManual) {
+        triggerScan();
+      } else {
+        pollData();
+      }
+    }
+
+    async function pollData() {
+      if (isScanning) return;
+      await loadScriptData();
+      if (window.LAST_SCAN && window.LAST_SCAN !== prevLastScan) {
+        prevLastScan = window.LAST_SCAN;
+        renderDashboard();
+      }
+    }
+
+    window.onload = () => {
+      prevLastScan = window.LAST_SCAN || '';
+      renderDashboard();
+      setInterval(pollData, 4000);
+    };
+  </script>
 </body>
 </html>
