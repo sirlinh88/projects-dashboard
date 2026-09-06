@@ -1,15 +1,5 @@
 <#
 .SYNOPSIS
-    Compatibility entry point for a one-off dashboard scan and publication.
+    Prevents accidental publication of local repository metadata.
 #>
-[CmdletBinding()]
-param(
-    [string]$WorkspaceRoot
-)
-
-if ([string]::IsNullOrWhiteSpace($WorkspaceRoot)) {
-    $WorkspaceRoot = Split-Path -Parent $PSScriptRoot
-}
-
-& (Join-Path $PSScriptRoot "sync_dashboard.ps1") -WorkspaceRoot $WorkspaceRoot
-exit $LASTEXITCODE
+throw 'Direct cloud publication is disabled. Public dashboard status is updated only by GitHub Actions.'

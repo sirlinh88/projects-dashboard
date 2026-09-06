@@ -19,7 +19,7 @@ if ([string]::IsNullOrWhiteSpace($WorkspaceRoot)) {
     $WorkspaceRoot = Split-Path -Parent $PSScriptRoot
 }
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    $OutputPath = Join-Path $PSScriptRoot "projects_data.js"
+    $OutputPath = Join-Path $PSScriptRoot "local_projects_data.js"
 }
 
 if (-not (Test-Path -LiteralPath $WorkspaceRoot -PathType Container)) {

@@ -422,16 +422,16 @@
               ${commitHtml}
             </div>
 
-            ${item.Blocker && item.Blocker !== 'Chưa có' && item.Blocker !== 'Trong.' ? `
+            ${!isPublicDashboard && item.Blocker && item.Blocker !== 'Chưa có' && item.Blocker !== 'Trong.' ? `
               <div class="blocker-box">
                 <strong>Điểm nghẽn:</strong> ${item.Blocker}
               </div>` : ''}
-            ${item.Action ? `
+            ${!isPublicDashboard && item.Action ? `
               <div class="action-box">
                 <strong>Việc tiếp theo:</strong> ${item.Action}
               </div>` : ''}
           </div>
-          ${quickCmdHtml}
+          ${isPublicDashboard ? '' : quickCmdHtml}
         `;
         container.appendChild(card);
       });
@@ -535,7 +535,10 @@
 
         const script = document.createElement('script');
         script.id = 'dynamicScript';
-        script.src = 'projects_data.js?t=' + new Date().getTime();
+        const dataFile = window.location.hostname.includes('github.io')
+          ? 'projects_data.js'
+          : 'local_projects_data.js';
+        script.src = dataFile + '?t=' + new Date().getTime();
         script.onload = () => resolve(true);
         script.onerror = () => resolve(false);
         document.body.appendChild(script);
