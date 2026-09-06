@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": null,
+  "repositories": {
+    "AI-STock": { "state": "awaiting_github_event", "updatedAt": null },
+    "GPMB-SmartAuto": { "state": "awaiting_github_event", "updatedAt": null },
+    "law-wiki-bidding-v2": { "state": "awaiting_github_event", "updatedAt": null },
+    "Mini-app-QLDA": { "state": "awaiting_github_event", "updatedAt": null },
+    "Smart": { "state": "awaiting_github_event", "updatedAt": null },
+    "SmartDoc-UIpath": { "state": "awaiting_github_event", "updatedAt": null },
+    "Zalo-work-hub": { "state": "awaiting_github_event", "updatedAt": null }
+  }
+}

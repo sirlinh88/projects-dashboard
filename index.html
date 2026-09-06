@@ -290,10 +290,13 @@
 
     function renderDashboard() {
       const data = window.PROJECTS_DATA || [];
+      const isPublicDashboard = window.location.hostname.includes('github.io');
       const container = document.getElementById('projectsGrid');
       container.innerHTML = '';
 
-      if (window.LAST_SCAN) {
+      if (window.PUBLIC_STATUS_REFRESH) {
+        document.getElementById('scanTimeText').innerText = window.PUBLIC_STATUS_REFRESH;
+      } else if (window.LAST_SCAN) {
         let devStr = window.MACHINE_NAME ? ` (${window.MACHINE_NAME})` : '';
         document.getElementById('scanTimeText').innerText = 'Đồng bộ: ' + window.LAST_SCAN + devStr;
       }
@@ -307,7 +310,7 @@
 
       data.forEach((item, index) => {
         const isActive = item.Category && item.Category.includes('active');
-        const hasGitAlert = (item.Uncommitted > 0) || (item.RemoteSync && (item.RemoteSync.includes('Behind') || item.RemoteSync.includes('Ahead')));
+        const hasGitAlert = !isPublicDashboard && ((item.Uncommitted > 0) || (item.RemoteSync && (item.RemoteSync.includes('Behind') || item.RemoteSync.includes('Ahead'))));
         const isP0P1 = (item.Priority === 'P0' || item.Priority === 'P1');
 
         if (isActive) {
@@ -334,7 +337,7 @@
         }
 
         let gitHealthHtml = `<span class="meta-val" style="color: #34d399;">${item.Health}</span>`;
-        if (item.Uncommitted > 0) {
+        if (!isPublicDashboard && item.Uncommitted > 0) {
           gitHealthHtml = `<span class="meta-val" style="color: #fbbf24;">⚠️ ${item.Uncommitted} file đang sửa</span>`;
         } else if (item.RemoteSync && item.RemoteSync.includes('Behind')) {
           gitHealthHtml = `<span class="meta-val" style="color: #f87171;">⚠️ Behind Remote</span>`;
@@ -342,7 +345,7 @@
 
         // Section: Uncommitted Changes (Work in Progress)
         let wipHtml = '';
-        if (item.Uncommitted > 0 && Array.isArray(item.UncommittedFiles) && item.UncommittedFiles.length > 0) {
+        if (!isPublicDashboard && item.Uncommitted > 0 && Array.isArray(item.UncommittedFiles) && item.UncommittedFiles.length > 0) {
           let fileListItems = item.UncommittedFiles.map(f => {
             let icon = '📝';
             let color = '#fbbf24';
@@ -366,7 +369,7 @@
 
         // Section: Last Commit Details & Diff
         let commitHtml = '';
-        if (item.LastCommitHash) {
+        if (!isPublicDashboard && item.LastCommitHash) {
           let recentHistoryHtml = '';
           if (Array.isArray(item.RecentCommits) && item.RecentCommits.length > 1) {
             let historyItems = item.RecentCommits.map(c => `<li><span style="color:#38bdf8;">${c.Hash}</span> (${c.Time}): ${c.Msg}</li>`).join('');
@@ -410,7 +413,7 @@
             </div>
             <div class="tags-row">${techTags}</div>
             <div class="meta-box">
-              <div class="meta-item"><span class="meta-key">Git Branch:</span><span class="meta-val" style="color: #38bdf8;">${item.Branch || 'N/A'}</span></div>
+              ${isPublicDashboard ? '' : `<div class="meta-item"><span class="meta-key">Git Branch:</span><span class="meta-val" style="color: #38bdf8;">${item.Branch || 'N/A'}</span></div>`}
               <div class="meta-item"><span class="meta-key">Git Health:</span>${gitHealthHtml}</div>
             </div>
             
@@ -539,6 +542,46 @@
       });
     }
 
+    function formatPublicStatusTime(value) {
+      return new Intl.DateTimeFormat('vi-VN', {
+        dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Bangkok'
+      }).format(new Date(value));
+    }
+
+    async function loadPublicStatusData() {
+      const response = await fetch(`public_status.json?t=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Public status HTTP ${response.status}`);
+      }
+
+      const document = await response.json();
+      if (document.schemaVersion !== 1 || typeof document.repositories !== 'object' || document.repositories === null) {
+        throw new Error('Public status schema is invalid');
+      }
+
+      Object.entries(document.repositories).forEach(([projectName, status]) => {
+        const project = (window.PROJECTS_DATA || []).find((item) => item.Name === projectName);
+        if (!project) return;
+
+        project.Uncommitted = 0;
+        project.UncommittedFiles = [];
+        project.UncommittedStat = '';
+
+        if (status && status.state === 'updated' && typeof status.updatedAt === 'string') {
+          project.RemoteSync = `GitHub event: ${formatPublicStatusTime(status.updatedAt)}`;
+          project.Health = '[OK] GitHub event received';
+        } else {
+          project.RemoteSync = 'GitHub event pending';
+          project.Health = '[i] Waiting for GitHub event';
+        }
+      });
+
+      const generatedAt = typeof document.generatedAt === 'string'
+        ? formatPublicStatusTime(document.generatedAt)
+        : 'chưa có sự kiện';
+      window.PUBLIC_STATUS_REFRESH = `GitHub event status: ${generatedAt}`;
+    }
+
     let isScanning = false;
     let prevLastScan = '';
 
@@ -551,6 +594,12 @@
 
       const loaded = await loadScriptData();
       if (loaded) {
+        try {
+          await loadPublicStatusData();
+        } catch (error) {
+          console.warn('Public GitHub status unavailable:', error);
+          window.PUBLIC_STATUS_REFRESH = 'GitHub event status unavailable';
+        }
         prevLastScan = window.LAST_SCAN || '';
         renderDashboard();
         showToast('\u2705 \u0110\u00e3 t\u1ea3i b\u1ea3n Dashboard \u0111\u01b0\u1ee3c xu\u1ea5t b\u1ea3n m\u1edbi nh\u1ea5t.', 3000);
@@ -659,15 +708,26 @@
 
     window.onload = async () => {
       await loadScriptData();
+      const isGitHubPages = window.location.hostname.includes('github.io');
+      if (isGitHubPages) {
+        try {
+          await loadPublicStatusData();
+        } catch (error) {
+          console.warn('Public GitHub status unavailable:', error);
+          window.PUBLIC_STATUS_REFRESH = 'GitHub event status unavailable';
+        }
+      }
       prevLastScan = window.LAST_SCAN || '';
       renderDashboard();
       const btn = document.getElementById('btnRefresh');
       if (btn) {
-        btn.innerHTML = window.location.hostname.includes('github.io')
-          ? '\u21bb T\u1ea3i d\u1eef li\u1ec7u m\u1edbi nh\u1ea5t'
+        btn.innerHTML = isGitHubPages
+          ? '\u21bb Qu\u00e9t GitHub'
           : '\ud83d\udd04 Qu\u00e9t v\u00e0 xu\u1ea5t b\u1ea3n';
       }
-      setInterval(pollData, 60000);
+      if (!isGitHubPages) {
+        setInterval(pollData, 60000);
+      }
     };
   </script>
 </body>
