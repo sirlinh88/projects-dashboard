@@ -273,6 +273,8 @@
     </div>
   </div>
 
+  <script src="public_catalog.js"></script>
+
   <!-- Dynamic Data Loader -->
   <script src="projects_data.js"></script>
 
@@ -286,6 +288,12 @@
       if (p === 'Ý tưởng') return '<span class="badge badge-p3">Ý tưởng</span>';
       if (p === 'Dọn dẹp') return '<span class="badge badge-p3" style="border-color:#64748b;">Dọn dẹp</span>';
       return '<span class="badge badge-p3">Ưu tiên ' + p + '</span>';
+    }
+
+    function escapePublicText(value) {
+      return String(value || '').replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[character]));
     }
 
     function renderDashboard() {
@@ -309,6 +317,7 @@
       let p0p1Count = 0;
 
       data.forEach((item, index) => {
+        const publicContext = (window.PUBLIC_CATALOG || {})[item.Name] || {};
         const isActive = item.Category && item.Category.includes('active');
         const hasGitAlert = !isPublicDashboard && ((item.Uncommitted > 0) || (item.RemoteSync && (item.RemoteSync.includes('Behind') || item.RemoteSync.includes('Ahead'))));
         const isP0P1 = (item.Priority === 'P0' || item.Priority === 'P1');
@@ -400,13 +409,18 @@
           quickCmdHtml = `<button class="btn-quickstart" onclick="copyCommand('${item.QuickCmd.replace(/'/g, "\\'")}')">📋 Copy: ${item.QuickCmd}</button>`;
         }
 
+        const publicContextHtml = isPublicDashboard ? `
+            ${publicContext.status ? `<div class="blocker-box"><strong>Trạng thái dự án:</strong> ${escapePublicText(publicContext.status)}</div>` : ''}
+            ${publicContext.nextAction ? `<div class="action-box"><strong>Việc cần triển khai:</strong> ${escapePublicText(publicContext.nextAction)}</div>` : ''}
+          ` : '';
+
         card.innerHTML = `
           <div>
             <div class="card-top">
               <span class="repo-name">${item.Name}</span>
               ${getPriorityBadge(item.Priority)}
             </div>
-            <p class="repo-desc">${item.Desc || ''}</p>
+            <p class="repo-desc">${isPublicDashboard ? escapePublicText(publicContext.summary) : (item.Desc || '')}</p>
             <div class="progress-box">
               <div class="progress-label"><span>Tiến độ hoàn thiện</span><span>${item.Progress || 0}%</span></div>
               <div class="progress-bar"><div class="progress-fill" style="width: ${item.Progress || 0}%;"></div></div>
@@ -421,6 +435,8 @@
               ${wipHtml}
               ${commitHtml}
             </div>
+
+            ${publicContextHtml}
 
             ${!isPublicDashboard && item.Blocker && item.Blocker !== 'Chưa có' && item.Blocker !== 'Trong.' ? `
               <div class="blocker-box">
