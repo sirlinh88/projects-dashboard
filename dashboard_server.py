@@ -25,7 +25,7 @@ except Exception:
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8088
 BASE_DIR = Path(__file__).resolve().parent
 SCANNER_SCRIPT = BASE_DIR / "scan_repos_status.ps1"
-PUSH_SCRIPT = BASE_DIR / "push_to_cloud.ps1"
+SYNC_SCRIPT = BASE_DIR / "sync_dashboard.ps1"
 
 def run_scanner():
     """Runs scan_repos_status.ps1 and returns (success: bool, message: str)"""
@@ -46,7 +46,7 @@ def run_scanner():
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=45
+            timeout=180
         )
         if result.returncode == 0:
             return True, "Quét và cập nhật trạng thái repository thành công!"
@@ -54,7 +54,7 @@ def run_scanner():
             err = result.stderr.strip() or result.stdout.strip()
             return False, f"Lỗi thực thi PowerShell (code {result.returncode}): {err}"
     except subprocess.TimeoutExpired:
-        return False, "Quá thời gian quét (Timeout 45s)!"
+        return False, "Quá thời gian quét (Timeout 180s)!"
     except Exception as e:
         return False, f"Ngoại lệ khi thực thi quét: {str(e)}"
 
@@ -64,10 +64,6 @@ class DashboardRequestHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(BASE_DIR), **kwargs)
 
     def end_headers(self):
-        # Allow Cross-Origin Requests (CORS)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Cache-Control")
         # Prevent caching of dynamic data
         if self.path.endswith(".js") or self.path.startswith("/api/"):
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -76,15 +72,14 @@ class DashboardRequestHandler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_OPTIONS(self):
-        self.send_response(200)
-        self.end_headers()
+        self.send_error(405, "Cross-origin API access is not supported")
 
     def do_GET(self):
-        if self.path.startswith("/api/scan"):
-            self.handle_scan()
+        if self.path.startswith("/api/"):
+            self.send_error(405, "Dashboard APIs accept POST only")
         elif self.path == "/" or self.path == "":
             self.send_response(302)
-            self.send_header("Location", "/projects_dashboard.html")
+            self.send_header("Location", "/index.html")
             self.end_headers()
         else:
             super().do_GET()
@@ -92,12 +87,14 @@ class DashboardRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         if self.path.startswith("/api/scan"):
             self.handle_scan()
-        elif self.path.startswith("/api/push"):
-            self.handle_push()
+        elif self.path.startswith("/api/sync"):
+            self.handle_sync()
         else:
             self.send_error(404, "Endpoint not found")
 
     def handle_scan(self):
+        if not self.is_local_api_request():
+            return
         print("\n[API] Nhận yêu cầu quét lại từ Dashboard...")
         success, message = run_scanner()
         
@@ -117,10 +114,18 @@ class DashboardRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
         print(f"[API] Kết quả quét: {'Thành công' if success else 'Thất bại'} - {message}")
 
-    def handle_push(self):
-        print("\n[API] Nhận yêu cầu đẩy lên GitHub Cloud...")
-        if not PUSH_SCRIPT.exists():
-            body = json.dumps({"success": False, "message": "Không tìm thấy push_to_cloud.ps1"}, ensure_ascii=False).encode("utf-8")
+    def is_local_api_request(self):
+        if self.client_address[0] in {"127.0.0.1", "::1"}:
+            return True
+        self.send_error(403, "Dashboard scan APIs are available only from localhost")
+        return False
+
+    def handle_sync(self):
+        if not self.is_local_api_request():
+            return
+        print("\n[API] Nhận yêu cầu quét và xuất bản Dashboard...")
+        if not SYNC_SCRIPT.exists():
+            body = json.dumps({"success": False, "message": "Không tìm thấy sync_dashboard.ps1"}, ensure_ascii=False).encode("utf-8")
             self.send_response(404)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -128,14 +133,14 @@ class DashboardRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(body)
             return
 
-        cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(PUSH_SCRIPT)]
+        cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(SYNC_SCRIPT)]
         try:
-            res = subprocess.run(cmd, cwd=str(BASE_DIR), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
+            res = subprocess.run(cmd, cwd=str(BASE_DIR), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=240)
             success = (res.returncode == 0)
-            msg = "Đã đồng bộ lên GitHub Pages!" if success else f"Lỗi push: {res.stderr}"
+            msg = "Đã quét và xuất bản lên GitHub Pages!" if success else "Lỗi khi quét hoặc xuất bản Dashboard."
         except Exception as e:
             success = False
-            msg = str(e)
+            msg = f"Không thể chạy đồng bộ: {str(e)}"
 
         body = json.dumps({"success": success, "message": msg}, ensure_ascii=False).encode("utf-8")
         self.send_response(200 if success else 500)
@@ -162,8 +167,8 @@ def main():
         print("=" * 70)
         print(f"🚀 REPOSITORY DASHBOARD SERVER ĐANG CHẠY TẠI PORT {PORT}")
         print("=" * 70)
-        print(f"👉 Mở xem: http://localhost:{PORT}/projects_dashboard.html")
-        print(f"👉 API quét tự động: http://localhost:{PORT}/api/scan")
+        print(f"👉 Mở xem: http://localhost:{PORT}/index.html")
+        print(f"👉 API quét/xuất bản: http://localhost:{PORT}/api/sync")
         print("=" * 70)
         print("Nhấn Ctrl + C để dừng máy chủ.\n")
         try:

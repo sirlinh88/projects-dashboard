@@ -542,8 +542,34 @@
     let isScanning = false;
     let prevLastScan = '';
 
-    // Trigger full Git scan via local dashboard server API
+    async function reloadPublishedData() {
+      const btn = document.getElementById('btnRefresh');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '\u23f3 \u0110ang t\u1ea3i d\u1eef li\u1ec7u...';
+      }
+
+      const loaded = await loadScriptData();
+      if (loaded) {
+        prevLastScan = window.LAST_SCAN || '';
+        renderDashboard();
+        showToast('\u2705 \u0110\u00e3 t\u1ea3i b\u1ea3n Dashboard \u0111\u01b0\u1ee3c xu\u1ea5t b\u1ea3n m\u1edbi nh\u1ea5t.', 3000);
+      } else {
+        showToast('\u26a0\ufe0f Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c d\u1eef li\u1ec7u Dashboard. H\u00e3y th\u1eed l\u1ea1i sau.', 5000);
+      }
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '\u21bb T\u1ea3i d\u1eef li\u1ec7u m\u1edbi nh\u1ea5t';
+      }
+    }
+
+    // Trigger a local scan only on the machine that owns the repositories.
     async function triggerScan() {
+      if (window.location.hostname.includes('github.io')) {
+        await reloadPublishedData();
+        return;
+      }
       if (isScanning) return;
       isScanning = true;
 
@@ -570,9 +596,9 @@
 
       showToast('⏳ Đang quét chi tiết Git toàn bộ kho code trong E:\\App AI...', 4000);
 
-      let scanUrl = '/api/scan';
+      let scanUrl = '/api/sync';
       if (window.location.protocol === 'file:' || !window.location.port) {
-        scanUrl = 'http://localhost:8088/api/scan';
+        scanUrl = 'http://localhost:8088/api/sync';
       }
 
       try {
@@ -631,10 +657,17 @@
       }
     }
 
-    window.onload = () => {
+    window.onload = async () => {
+      await loadScriptData();
       prevLastScan = window.LAST_SCAN || '';
       renderDashboard();
-      setInterval(pollData, 4000);
+      const btn = document.getElementById('btnRefresh');
+      if (btn) {
+        btn.innerHTML = window.location.hostname.includes('github.io')
+          ? '\u21bb T\u1ea3i d\u1eef li\u1ec7u m\u1edbi nh\u1ea5t'
+          : '\ud83d\udd04 Qu\u00e9t v\u00e0 xu\u1ea5t b\u1ea3n';
+      }
+      setInterval(pollData, 60000);
     };
   </script>
 </body>

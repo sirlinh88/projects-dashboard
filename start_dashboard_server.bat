@@ -20,7 +20,7 @@ echo   Nhấn Ctrl + C để dừng máy chủ bất cứ lúc nào.
 echo =======================================================================
 echo.
 
-start "" "http://localhost:8088/projects_dashboard.html"
+start "" "http://localhost:8088/index.html"
 python dashboard_server.py 8088
 if %ERRORLEVEL% NEQ 0 (
     echo.
