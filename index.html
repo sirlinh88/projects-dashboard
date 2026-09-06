@@ -183,8 +183,8 @@
 
   <header>
     <div class="header-title">
-      <h1>🚀 Bảng Quản Trị Repository - E:\App AI</h1>
-      <p>Thư mục gốc: <code>E:\App AI</code> | Trợ lý Antigravity duy trì tự động</p>
+      <h1 id="mainTitle">🚀 Bảng Quản Trị Repository - E:\App AI</h1>
+      <p id="subTitle">Thư mục gốc: <code>E:\App AI</code> | Trợ lý Antigravity duy trì tự động</p>
     </div>
     <div class="header-actions">
       <div class="sync-status">
@@ -192,7 +192,7 @@
         <span id="scanTimeText">Đang tải dữ liệu...</span>
       </div>
       <button class="btn-refresh" id="btnRefresh" onclick="triggerScan()">🔄 Quét lại ngay</button>
-      <button class="btn-refresh" style="background:#1e1b4b; border-color:#4338ca; color:#a5b4fc;" onclick="openLanModal()">📱 Mở trên điện thoại / LAN</button>
+      <button class="btn-refresh" id="btnLanModal" style="background:#1e1b4b; border-color:#4338ca; color:#a5b4fc;" onclick="openLanModal()">📱 Mở trên điện thoại / LAN</button>
     </div>
   </header>
 
@@ -212,24 +212,22 @@
     <div class="stat-card">
       <div class="stat-label">Tổng Số Dự Án</div>
       <div class="stat-val" id="statTotal">11</div>
-      <div class="stat-desc">Thư mục trong E:\App AI</div>
+      <div class="stat-desc" id="statTotalDesc">Thư mục trong E:\App AI</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Đang Hoạt Động (Active)</div>
       <div class="stat-val" id="statActive" style="color: #38bdf8;">6</div>
-      <div class="stat-desc">Code base hoàn chỉnh & chạy được</div>
+      <div class="stat-desc" id="statActiveDesc">Code base hoàn chỉnh & chạy được</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Cần Xử Lý Git</div>
+      <div class="stat-label" id="statGitLabel">Cần Xử Lý Git</div>
       <div class="stat-val" id="statGitAlert" style="color: #fbbf24;">2</div>
-      <div class="stat-desc">Có uncommitted hoặc sau remote</div>
+      <div class="stat-desc" id="statGitDesc">Có uncommitted hoặc sau remote</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Tiến Độ Trung Bình (Active)</div>
       <div class="stat-val" id="statAvgProgress" style="color: #34d399;">76%</div>
       <div class="stat-desc">Giai đoạn hoàn thiện & tích hợp</div>
-    </div>
-  </div>
 
   <!-- Controls & Filters -->
   <div class="controls">
@@ -237,7 +235,7 @@
       <button class="tab-btn active" onclick="filterCards('all')">Tất cả (<span id="countAll">11</span>)</button>
       <button class="tab-btn" onclick="filterCards('active')">Đang phát triển (<span id="countActive">6</span>)</button>
       <button class="tab-btn" onclick="filterCards('p0p1')">Ưu tiên cao P0/P1 (<span id="countP0P1">4</span>)</button>
-      <button class="tab-btn" onclick="filterCards('git')">Cần xử lý Git (<span id="countGit">2</span>)</button>
+      <button class="tab-btn" id="tabGitBtn" onclick="filterCards('git')">Cần xử lý Git (<span id="countGit">2</span>)</button>
       <button class="tab-btn" onclick="filterCards('stubs')">Ý tưởng / Dọn dẹp</button>
     </div>
     <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm kiếm repository, file, công nghệ..." onkeyup="searchProjects()" />
@@ -281,15 +279,19 @@
   <script>
     let currentFilter = 'all';
 
+    function isPublicMode() {
+      return window.location.hostname.includes('github.io') || window.location.search.includes('public=true');
+    }
+
     function getPriorityBadge(p) {
       if (p === 'P0') return '<span class="badge badge-p0">Ưu tiên P0</span>';
       if (p === 'P1') return '<span class="badge badge-p1">Ưu tiên P1</span>';
       if (p === 'P2') return '<span class="badge badge-p2">Ưu tiên P2</span>';
+      if (p === 'P3') return '<span class="badge badge-p3">Ưu tiên P3</span>';
       if (p === 'Ý tưởng') return '<span class="badge badge-p3">Ý tưởng</span>';
       if (p === 'Dọn dẹp') return '<span class="badge badge-p3" style="border-color:#64748b;">Dọn dẹp</span>';
       return '<span class="badge badge-p3">Ưu tiên ' + p + '</span>';
     }
-
     function escapePublicText(value) {
       return String(value || '').replace(/[&<>"']/g, (character) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -298,9 +300,47 @@
 
     function renderDashboard() {
       const data = window.PROJECTS_DATA || [];
-      const isPublicDashboard = window.location.hostname.includes('github.io');
+      const isPublicDashboard = isPublicMode();
       const container = document.getElementById('projectsGrid');
       container.innerHTML = '';
+
+      // Update Header & Banners for Public vs Local mode
+      const hookBanner = document.querySelector('.hook-banner');
+      if (hookBanner) {
+        hookBanner.style.display = isPublicDashboard ? 'none' : 'flex';
+      }
+      const btnLan = document.getElementById('btnLanModal');
+      if (btnLan) {
+        btnLan.style.display = isPublicDashboard ? 'none' : 'inline-flex';
+      }
+      const mainTitle = document.getElementById('mainTitle');
+      if (mainTitle) {
+        mainTitle.innerHTML = isPublicDashboard
+          ? '🚀 Bảng Quản Trị Dự Án'
+          : '🚀 Bảng Quản Trị Repository - E:\\App AI';
+      }
+      const subTitle = document.getElementById('subTitle');
+      if (subTitle) {
+        subTitle.innerHTML = isPublicDashboard
+          ? 'Giám sát trạng thái dự án tự động qua GitHub Actions'
+          : 'Thư mục gốc: <code>E:\\App AI</code> | Trợ lý Antigravity duy trì tự động';
+      }
+      const statTotalDesc = document.getElementById('statTotalDesc');
+      if (statTotalDesc) {
+        statTotalDesc.innerText = isPublicDashboard ? 'Dự án được theo dõi' : 'Thư mục trong E:\\App AI';
+      }
+      const statGitLabel = document.getElementById('statGitLabel');
+      if (statGitLabel) {
+        statGitLabel.innerText = isPublicDashboard ? 'Chờ GitHub Event' : 'Cần Xử Lý Git';
+      }
+      const statGitDesc = document.getElementById('statGitDesc');
+      if (statGitDesc) {
+        statGitDesc.innerText = isPublicDashboard ? 'Chưa nhận sự kiện đầu tiên' : 'Có uncommitted hoặc sau remote';
+      }
+      const tabGitBtn = document.getElementById('tabGitBtn');
+      if (tabGitBtn) {
+        tabGitBtn.innerHTML = isPublicDashboard ? 'Chờ GitHub Event (<span id="countGit">0</span>)' : 'Cần xử lý Git (<span id="countGit">0</span>)';
+      }
 
       if (window.PUBLIC_STATUS_REFRESH) {
         document.getElementById('scanTimeText').innerText = window.PUBLIC_STATUS_REFRESH;
@@ -309,7 +349,7 @@
         document.getElementById('scanTimeText').innerText = 'Đồng bộ: ' + window.LAST_SCAN + devStr;
       }
 
-      // Stats
+      // Stats counters
       let total = data.length;
       let activeCount = 0;
       let gitAlertCount = 0;
@@ -317,14 +357,25 @@
       let p0p1Count = 0;
 
       data.forEach((item, index) => {
+        const pubStatus = (window.PUBLIC_STATUS_MAP || {})[item.Name] || {};
         const publicContext = (window.PUBLIC_CATALOG || {})[item.Name] || {};
+        const hasLiveStatus = pubStatus && pubStatus.state === 'updated';
+
+        // Dynamic values prioritize public_status.json; fallback to public_catalog.js / projects_data.js
+        const effectiveStatus = (hasLiveStatus && pubStatus.status) ? pubStatus.status : (publicContext.status || '');
+        const effectiveNextAction = (hasLiveStatus && pubStatus.nextAction) ? pubStatus.nextAction : (publicContext.nextAction || '');
+        const effectiveProgress = (hasLiveStatus && typeof pubStatus.progress === 'number') ? pubStatus.progress : (item.Progress || 0);
+        const effectivePriority = (hasLiveStatus && pubStatus.priority) ? pubStatus.priority : (item.Priority || 'P3');
+
         const isActive = item.Category && item.Category.includes('active');
-        const hasGitAlert = !isPublicDashboard && ((item.Uncommitted > 0) || (item.RemoteSync && (item.RemoteSync.includes('Behind') || item.RemoteSync.includes('Ahead'))));
-        const isP0P1 = (item.Priority === 'P0' || item.Priority === 'P1');
+        const hasGitAlert = isPublicDashboard
+          ? (!hasLiveStatus && (!item.Category || !item.Category.includes('stubs')))
+          : ((item.Uncommitted > 0) || (item.RemoteSync && (item.RemoteSync.includes('Behind') || item.RemoteSync.includes('Ahead'))));
+        const isP0P1 = (effectivePriority === 'P0' || effectivePriority === 'P1');
 
         if (isActive) {
           activeCount++;
-          progressSum += (item.Progress || 0);
+          progressSum += effectiveProgress;
         }
         if (hasGitAlert) gitAlertCount++;
         if (isP0P1) p0p1Count++;
@@ -333,10 +384,16 @@
         const card = document.createElement('div');
         card.className = 'proj-card';
         card.setAttribute('data-category', item.Category || 'stubs');
-        
+        card.setAttribute('data-live', hasLiveStatus ? 'true' : 'false');
+        card.setAttribute('data-priority', effectivePriority);
+
         let techText = Array.isArray(item.Tech) ? item.Tech.join(' ') : (item.Tech || '');
-        let uncommittedFilesText = Array.isArray(item.UncommittedFiles) ? item.UncommittedFiles.join(' ') : '';
-        card.setAttribute('data-name', (item.Name + ' ' + item.Desc + ' ' + techText + ' ' + uncommittedFilesText + ' ' + (item.LastCommitMsg || '')).toLowerCase());
+        let searchableText = (item.Name + ' ' + (publicContext.summary || '') + ' ' + (item.Desc || '') + ' ' + techText + ' ' + effectiveStatus + ' ' + effectiveNextAction).toLowerCase();
+        if (!isPublicDashboard) {
+          let uncommittedFilesText = Array.isArray(item.UncommittedFiles) ? item.UncommittedFiles.join(' ') : '';
+          searchableText += ' ' + uncommittedFilesText + ' ' + (item.LastCommitMsg || '');
+        }
+        card.setAttribute('data-name', searchableText);
 
         let techTags = '';
         if (Array.isArray(item.Tech)) {
@@ -345,14 +402,23 @@
           techTags = `<span class="tag">${item.Tech}</span>`;
         }
 
-        let gitHealthHtml = `<span class="meta-val" style="color: #34d399;">${item.Health}</span>`;
-        if (!isPublicDashboard && item.Uncommitted > 0) {
-          gitHealthHtml = `<span class="meta-val" style="color: #fbbf24;">⚠️ ${item.Uncommitted} file đang sửa</span>`;
-        } else if (item.RemoteSync && item.RemoteSync.includes('Behind')) {
-          gitHealthHtml = `<span class="meta-val" style="color: #f87171;">⚠️ Behind Remote</span>`;
+        let gitHealthHtml = '';
+        if (isPublicDashboard) {
+          if (hasLiveStatus) {
+            gitHealthHtml = '<span class="meta-val" style="color: #34d399;">🟢 Đã nhận GitHub event</span>';
+          } else {
+            gitHealthHtml = '<span class="meta-val" style="color: #94a3b8;">⏳ Chờ GitHub event</span>';
+          }
+        } else {
+          gitHealthHtml = `<span class="meta-val" style="color: #34d399;">${item.Health}</span>`;
+          if (item.Uncommitted > 0) {
+            gitHealthHtml = `<span class="meta-val" style="color: #fbbf24;">⚠️ ${item.Uncommitted} file đang sửa</span>`;
+          } else if (item.RemoteSync && item.RemoteSync.includes('Behind')) {
+            gitHealthHtml = `<span class="meta-val" style="color: #f87171;">⚠️ Behind Remote</span>`;
+          }
         }
 
-        // Section: Uncommitted Changes (Work in Progress)
+        // Section: Uncommitted Changes (Work in Progress - Local Only)
         let wipHtml = '';
         if (!isPublicDashboard && item.Uncommitted > 0 && Array.isArray(item.UncommittedFiles) && item.UncommittedFiles.length > 0) {
           let fileListItems = item.UncommittedFiles.map(f => {
@@ -376,7 +442,7 @@
           `;
         }
 
-        // Section: Last Commit Details & Diff
+        // Section: Last Commit Details & Diff (Local Only)
         let commitHtml = '';
         if (!isPublicDashboard && item.LastCommitHash) {
           let recentHistoryHtml = '';
@@ -405,32 +471,60 @@
         }
 
         let quickCmdHtml = '';
-        if (item.QuickCmd) {
+        if (!isPublicDashboard && item.QuickCmd) {
           quickCmdHtml = `<button class="btn-quickstart" onclick="copyCommand('${item.QuickCmd.replace(/'/g, "\\'")}')">📋 Copy: ${item.QuickCmd}</button>`;
         }
 
-        const publicContextHtml = isPublicDashboard ? `
-            ${publicContext.status ? `<div class="blocker-box"><strong>Trạng thái dự án:</strong> ${escapePublicText(publicContext.status)}</div>` : ''}
-            ${publicContext.nextAction ? `<div class="action-box"><strong>Việc cần triển khai:</strong> ${escapePublicText(publicContext.nextAction)}</div>` : ''}
-          ` : '';
+        let publicContextHtml = '';
+        if (isPublicDashboard) {
+          const badgeLive = hasLiveStatus
+            ? '<span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.4); padding: 1px 6px; border-radius: 4px; margin-left: 6px;">LIVE</span>'
+            : '<span style="font-size: 10px; color: #94a3b8; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.3); padding: 1px 6px; border-radius: 4px; margin-left: 6px;">CATALOG</span>';
+
+          publicContextHtml = `
+            ${effectiveStatus ? `
+              <div class="blocker-box" style="border-left-color: #38bdf8; color: #e2e8f0; background: rgba(56, 189, 248, 0.08);">
+                <strong style="color: #38bdf8;">Trạng thái dự án:</strong> ${escapePublicText(effectiveStatus)}${badgeLive}
+              </div>` : ''}
+            ${effectiveNextAction ? `
+              <div class="action-box">
+                <strong>Việc cần triển khai:</strong> ${escapePublicText(effectiveNextAction)}
+              </div>` : ''}
+          `;
+        }
+
+        let metaBoxContent = '';
+        if (isPublicDashboard) {
+          const updateTimeText = (hasLiveStatus && pubStatus.updatedAt)
+            ? formatPublicStatusTime(pubStatus.updatedAt)
+            : 'Chưa có sự kiện';
+          metaBoxContent = `
+            <div class="meta-item"><span class="meta-key">Trạng thái đồng bộ:</span>${gitHealthHtml}</div>
+            <div class="meta-item"><span class="meta-key">Cập nhật:</span><span class="meta-val" style="color: ${hasLiveStatus ? '#38bdf8' : '#94a3b8'};">${updateTimeText}</span></div>
+          `;
+        } else {
+          metaBoxContent = `
+            <div class="meta-item"><span class="meta-key">Git Branch:</span><span class="meta-val" style="color: #38bdf8;">${item.Branch || 'N/A'}</span></div>
+            <div class="meta-item"><span class="meta-key">Git Health:</span>${gitHealthHtml}</div>
+          `;
+        }
 
         card.innerHTML = `
           <div>
             <div class="card-top">
               <span class="repo-name">${item.Name}</span>
-              ${getPriorityBadge(item.Priority)}
+              ${getPriorityBadge(effectivePriority)}
             </div>
             <p class="repo-desc">${isPublicDashboard ? escapePublicText(publicContext.summary) : (item.Desc || '')}</p>
             <div class="progress-box">
-              <div class="progress-label"><span>Tiến độ hoàn thiện</span><span>${item.Progress || 0}%</span></div>
-              <div class="progress-bar"><div class="progress-fill" style="width: ${item.Progress || 0}%;"></div></div>
+              <div class="progress-label"><span>Tiến độ hoàn thiện</span><span>${effectiveProgress}%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: ${effectiveProgress}%;"></div></div>
             </div>
             <div class="tags-row">${techTags}</div>
             <div class="meta-box">
-              ${isPublicDashboard ? '' : `<div class="meta-item"><span class="meta-key">Git Branch:</span><span class="meta-val" style="color: #38bdf8;">${item.Branch || 'N/A'}</span></div>`}
-              <div class="meta-item"><span class="meta-key">Git Health:</span>${gitHealthHtml}</div>
+              ${metaBoxContent}
             </div>
-            
+
             <div class="inspector-section">
               ${wipHtml}
               ${commitHtml}
@@ -476,24 +570,37 @@
         btn.innerText = '▼ Xem lịch sử commit';
       }
     }
-
     function filterCards(category) {
       currentFilter = category;
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(`'${category}'`));
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => {
+        const attr = b.getAttribute('onclick') || '';
+        return attr.includes(`'${category}'`);
+      });
       if (activeBtn) activeBtn.classList.add('active');
-      
+
+      const isPublic = isPublicMode();
       const cards = document.querySelectorAll('.proj-card');
       cards.forEach(card => {
         const cat = card.getAttribute('data-category') || '';
+        const priority = card.getAttribute('data-priority') || '';
+        const isLive = card.getAttribute('data-live') === 'true';
+
         if (category === 'all') {
           card.style.display = 'flex';
+        } else if (category === 'active') {
+          card.style.display = cat.includes('active') ? 'flex' : 'none';
+        } else if (category === 'p0p1') {
+          card.style.display = (priority === 'P0' || priority === 'P1' || cat.includes('p0p1')) ? 'flex' : 'none';
+        } else if (category === 'stubs') {
+          card.style.display = cat.includes('stubs') ? 'flex' : 'none';
         } else if (category === 'git') {
-          card.style.display = cat.includes('git') ? 'flex' : 'none';
-        } else if (cat.includes(category)) {
-          card.style.display = 'flex';
-        } else {
-          card.style.display = 'none';
+          if (isPublic) {
+            card.style.display = (!isLive && !cat.includes('stubs')) ? 'flex' : 'none';
+          } else {
+            const text = card.innerHTML;
+            card.style.display = (text.includes('⚠️') || text.includes('Behind')) ? 'flex' : 'none';
+          }
         }
       });
     }
@@ -578,6 +685,8 @@
         throw new Error('Public status schema is invalid');
       }
 
+      window.PUBLIC_STATUS_MAP = document.repositories;
+
       Object.entries(document.repositories).forEach(([projectName, status]) => {
         const project = (window.PROJECTS_DATA || []).find((item) => item.Name === projectName);
         if (!project) return;
@@ -586,12 +695,20 @@
         project.UncommittedFiles = [];
         project.UncommittedStat = '';
 
-        if (status && status.state === 'updated' && typeof status.updatedAt === 'string') {
-          project.RemoteSync = `GitHub event: ${formatPublicStatusTime(status.updatedAt)}`;
-          project.Health = '[OK] GitHub event received';
+        if (status && status.state === 'updated') {
+          if (typeof status.updatedAt === 'string') {
+            project.RemoteSync = `GitHub event: ${formatPublicStatusTime(status.updatedAt)}`;
+          }
+          project.Health = '🟢 Đã nhận GitHub event';
+          if (typeof status.progress === 'number') {
+            project.Progress = status.progress;
+          }
+          if (status.priority) {
+            project.Priority = status.priority;
+          }
         } else {
           project.RemoteSync = 'GitHub event pending';
-          project.Health = '[i] Waiting for GitHub event';
+          project.Health = '⏳ Chờ GitHub event';
         }
       });
 
@@ -606,9 +723,10 @@
 
     async function reloadPublishedData() {
       const btn = document.getElementById('btnRefresh');
+      const isPublic = isPublicMode();
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '\u23f3 \u0110ang t\u1ea3i d\u1eef li\u1ec7u...';
+        btn.innerHTML = '⏳ Đang tải dữ liệu...';
       }
 
       const loaded = await loadScriptData();
@@ -621,20 +739,22 @@
         }
         prevLastScan = window.LAST_SCAN || '';
         renderDashboard();
-        showToast('\u2705 \u0110\u00e3 t\u1ea3i b\u1ea3n Dashboard \u0111\u01b0\u1ee3c xu\u1ea5t b\u1ea3n m\u1edbi nh\u1ea5t.', 3000);
+        showToast(isPublic ? '✅ Đã tải dữ liệu mới nhất từ GitHub.' : '✅ Đã tải bản Dashboard được xuất bản mới nhất.', 3000);
       } else {
-        showToast('\u26a0\ufe0f Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c d\u1eef li\u1ec7u Dashboard. H\u00e3y th\u1eed l\u1ea1i sau.', 5000);
+        showToast('⚠️ Không tải được dữ liệu Dashboard. Hãy thử lại sau.', 5000);
       }
 
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = '\u21bb T\u1ea3i d\u1eef li\u1ec7u m\u1edbi nh\u1ea5t';
+        btn.innerHTML = isPublic
+          ? '🔄 Quét GitHub'
+          : '🔄 Quét lại ngay';
       }
     }
 
     // Trigger a local scan only on the machine that owns the repositories.
     async function triggerScan() {
-      if (window.location.hostname.includes('github.io')) {
+      if (isPublicMode()) {
         await reloadPublishedData();
         return;
       }
@@ -727,8 +847,8 @@
 
     window.onload = async () => {
       await loadScriptData();
-      const isGitHubPages = window.location.hostname.includes('github.io');
-      if (isGitHubPages) {
+      const isPublic = isPublicMode();
+      if (isPublic) {
         try {
           await loadPublicStatusData();
         } catch (error) {
@@ -740,11 +860,11 @@
       renderDashboard();
       const btn = document.getElementById('btnRefresh');
       if (btn) {
-        btn.innerHTML = isGitHubPages
-          ? '\u21bb Qu\u00e9t GitHub'
-          : '\ud83d\udd04 Qu\u00e9t v\u00e0 xu\u1ea5t b\u1ea3n';
+        btn.innerHTML = isPublic
+          ? '🔄 Quét GitHub'
+          : '🔄 Quét lại ngay';
       }
-      if (!isGitHubPages) {
+      if (!isPublic) {
         setInterval(pollData, 60000);
       }
     };

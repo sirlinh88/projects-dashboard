@@ -10,6 +10,11 @@ window.PUBLIC_CATALOG = Object.freeze({
     status: 'Đang phát triển; chờ GitHub event đầu tiên để xác nhận trạng thái từ xa.',
     nextAction: 'Thêm Secret dashboard và xác nhận workflow GitHub Actions chạy thành công.'
   },
+  'Data-Hub': {
+    summary: 'Nguồn dữ liệu chuẩn (SSOT) cho thông tin master dự án và pipeline trích xuất dữ liệu.',
+    status: 'Đang vận hành Data Hub API v2 và đồng bộ master dự án.',
+    nextAction: 'Thêm Secret dashboard và hoàn tất kiểm thử tích hợp với QLDA.'
+  },
   'GPMB-SmartAuto': {
     summary: 'Blueprint tự động hóa hồ sơ giải phóng mặt bằng.',
     status: 'Khởi tạo, chưa có phần mềm triển khai.',

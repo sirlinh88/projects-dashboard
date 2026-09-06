@@ -79,6 +79,16 @@ $metadata = @{
         Action = "Git pull commit moi tu origin/main; nap mau TB phan cong nhiem vu vao DB."
         QuickCmd = "poetry run uvicorn app.main:app --port 8000 --reload"
     }
+    "Data-Hub" = @{
+        Priority = "P0"
+        Category = "active p0p1"
+        Desc = "Nguon du lieu chuan (SSOT) cho thong tin master du an, Streamlit & Data Hub API v2."
+        Progress = 85
+        Tech = @("Python", "FastAPI", "Streamlit", "PostgreSQL", "SQLite")
+        Blocker = "Can hoan thien kiem thu tich hop voi QLDA va SmartDoc."
+        Action = "Them Secret dashboard va dong bo trang thai master project voi QLDA."
+        QuickCmd = "streamlit run dashboard.py"
+    }
     "Zalo-work-hub" = @{
         Priority = "P1"
         Category = "active p0p1"

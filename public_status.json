@@ -1,13 +1,70 @@
 {
   "schemaVersion": 1,
-  "generatedAt": null,
+  "generatedAt": "2026-09-06T08:00:00Z",
   "repositories": {
-    "AI-STock": { "state": "awaiting_github_event", "updatedAt": null },
-    "GPMB-SmartAuto": { "state": "awaiting_github_event", "updatedAt": null },
-    "law-wiki-bidding-v2": { "state": "awaiting_github_event", "updatedAt": null },
-    "Mini-app-QLDA": { "state": "awaiting_github_event", "updatedAt": null },
-    "Smart": { "state": "awaiting_github_event", "updatedAt": null },
-    "SmartDoc-UIpath": { "state": "awaiting_github_event", "updatedAt": null },
-    "Zalo-work-hub": { "state": "awaiting_github_event", "updatedAt": null }
+    "AI-STock": {
+      "state": "updated",
+      "updatedAt": "2026-09-06T08:00:00Z",
+      "status": "Đang phát triển và tối ưu mô hình",
+      "nextAction": "Xác thực mô hình và kiểm thử báo cáo thị trường",
+      "progress": 85,
+      "priority": "P1"
+    },
+    "Data-Hub": {
+      "state": "updated",
+      "updatedAt": "2026-09-06T08:00:00Z",
+      "status": "Đang vận hành Data Hub API v2 và đồng bộ master",
+      "nextAction": "Hoàn thiện kiểm thử tích hợp với QLDA và SmartDoc",
+      "progress": 85,
+      "priority": "P0"
+    },
+    "GPMB-SmartAuto": {
+      "state": "updated",
+      "updatedAt": "2026-09-06T08:00:00Z",
+      "status": "Khởi tạo blueprint tự động hóa hồ sơ",
+      "nextAction": "Xác định kiến trúc và cấu trúc quy trình nghiệp vụ",
+      "progress": 5,
+      "priority": "P3"
+    },
+    "law-wiki-bidding-v2": {
+      "state": "updated",
+      "updatedAt": "2026-09-06T08:00:00Z",
+      "status": "Đang duy trì và cập nhật kho tri thức đấu thầu",
+      "nextAction": "Hoàn thiện liên kết dữ liệu và giao diện tra cứu",
+      "progress": 75,
+      "priority": "P2"
+    },
+    "Mini-app-QLDA": {
+      "state": "updated",
+      "updatedAt": "2026-09-06T08:00:00Z",
+      "status": "Đang phát triển và tích hợp dữ liệu dự án",
+      "nextAction": "Kiểm thử các luồng xác thực và giao diện quản lý",
+      "progress": 70,
+      "priority": "P0"
+    },
+    "Smart": {
+      "state": "updated",
+      "updatedAt": "2026-09-06T08:00:00Z",
+      "status": "Chờ rà soát và lưu trữ",
+      "nextAction": "Xác định nguồn gốc và quyết định lưu trữ",
+      "progress": 5,
+      "priority": "Dọn dẹp"
+    },
+    "SmartDoc-UIpath": {
+      "state": "updated",
+      "updatedAt": "2026-09-06T08:00:00Z",
+      "status": "Đang kiểm thử tích hợp template",
+      "nextAction": "Chạy UAT và chuẩn bị đóng gói",
+      "progress": 80,
+      "priority": "P0"
+    },
+    "Zalo-work-hub": {
+      "state": "updated",
+      "updatedAt": "2026-09-06T08:00:00Z",
+      "status": "Đang phát triển tác vụ vận hành và webhook",
+      "nextAction": "Kiểm chứng luồng thông báo và tích hợp dịch vụ",
+      "progress": 65,
+      "priority": "P1"
+    }
   }
 }

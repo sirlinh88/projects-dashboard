@@ -1,0 +1,87 @@
+# Mẫu GitHub Actions Workflow để đặt vào từng repo nguồn:
+# .github/workflows/publish-dashboard-status.yml
+# Thay <PROJECT_NAME> bằng tên repo tương ứng (vd: AI-STock, Mini-app-QLDA, ...)
+
+name: Publish public dashboard status
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish-status:
+    runs-on: ubuntu-latest
+    env:
+      DASHBOARD_REPOSITORY: sirlinh88/projects-dashboard
+      DASHBOARD_PROJECT: <PROJECT_NAME>
+    steps:
+      - name: Verify dashboard secret
+        env:
+          DASHBOARD_TOKEN: ${{ secrets.PROJECTS_DASHBOARD_PUSH_TOKEN }}
+        run: |
+          if [ -z "${DASHBOARD_TOKEN:-}" ]; then
+            echo "::error::Missing secret PROJECTS_DASHBOARD_PUSH_TOKEN. Please configure this secret with write access to $DASHBOARD_REPOSITORY."
+            exit 1
+          fi
+
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Verify status file
+        run: |
+          if [ ! -f "source/.dashboard/status.yml" ]; then
+            echo "::error::Missing required status file .dashboard/status.yml"
+            exit 1
+          fi
+
+      - name: Checkout dashboard repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.DASHBOARD_REPOSITORY }}
+          ref: main
+          token: ${{ secrets.PROJECTS_DASHBOARD_PUSH_TOKEN }}
+          path: dashboard
+
+      - name: Validate and publish status with retry
+        working-directory: dashboard
+        run: |
+          set -euo pipefail
+          git config user.name "projects-dashboard[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          MAX_ATTEMPTS=5
+          for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            echo "=== Publish attempt $attempt of $MAX_ATTEMPTS ==="
+            git fetch origin main
+            git checkout -B main origin/main
+
+            python scripts/publish_repository_status.py \
+              --file public_status.json \
+              --project "$DASHBOARD_PROJECT" \
+              --status-file "../source/.dashboard/status.yml" \
+              --updated-at "$(date --utc +%Y-%m-%dT%H:%M:%SZ)"
+
+            git add public_status.json
+            if git diff --staged --quiet; then
+              echo "No changes detected in public_status.json"
+              exit 0
+            fi
+
+            git commit -m "status: update $DASHBOARD_PROJECT from .dashboard/status.yml"
+            if git push origin HEAD:main; then
+              echo "Successfully published status for $DASHBOARD_PROJECT"
+              exit 0
+            fi
+
+            echo "Push conflict detected. Waiting $((attempt * 3))s before retry..."
+            sleep $((attempt * 3))
+          done
+
+          echo "::error::Failed to publish status after $MAX_ATTEMPTS attempts."
+          exit 1

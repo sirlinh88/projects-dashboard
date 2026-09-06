@@ -1,0 +1,6 @@
+# Mẫu cấu hình trạng thái dự án công khai
+# Chỉ cho phép 4 trường sau, không chứa link nội bộ, commit, branch, tên file hoặc dữ liệu nhạy cảm.
+status: "Đang kiểm thử tích hợp"
+next_action: "Chạy UAT và chuẩn bị triển khai"
+progress: 80
+priority: P1
