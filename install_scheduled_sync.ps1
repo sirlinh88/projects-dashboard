@@ -25,6 +25,11 @@ if ($LASTEXITCODE -ne 0) {
     throw "Could not create scheduled task '$TaskName'."
 }
 
+$task = Get-ScheduledTask -TaskName $TaskName
+$task.Settings.DisallowStartIfOnBatteries = $false
+$task.Settings.StopIfGoingOnBatteries = $false
+Set-ScheduledTask -InputObject $task | Out-Null
+
 Write-Host "[+] Installed scheduled task '$TaskName' every $IntervalMinutes minutes." -ForegroundColor Green
 
 if ($RunNow) {
