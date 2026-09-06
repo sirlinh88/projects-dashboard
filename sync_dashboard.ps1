@@ -7,12 +7,13 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$WorkspaceRoot = (Split-Path -Parent $PSScriptRoot),
+    [string]$WorkspaceRoot,
     [switch]$NoPush
 )
 
 $ErrorActionPreference = "Stop"
 $DashboardRoot = $PSScriptRoot
+$WorkspaceRoot = if ([string]::IsNullOrWhiteSpace($WorkspaceRoot)) { Split-Path -Parent $DashboardRoot } else { $WorkspaceRoot }
 $ScannerScript = Join-Path $DashboardRoot "scan_repos_status.ps1"
 $DataFile = Join-Path $DashboardRoot "projects_data.js"
 $Mutex = New-Object System.Threading.Mutex($false, "ProjectsDashboardSync")

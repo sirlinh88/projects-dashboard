@@ -19,11 +19,12 @@ if (-not (Test-Path -LiteralPath $SyncScript -PathType Leaf)) {
     throw "Sync script does not exist: $SyncScript"
 }
 
-$action = New-ScheduledTaskAction -Execute $PowerShellExe -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$SyncScript`""
-$trigger = New-ScheduledTaskTrigger -Daily -At "00:00" -RepetitionInterval (New-TimeSpan -Minutes $IntervalMinutes) -RepetitionDuration (New-TimeSpan -Days 1)
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 10) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+$TaskCommand = "\`"$PowerShellExe\`" -NoProfile -ExecutionPolicy Bypass -File \`"$SyncScript\`""
+& schtasks.exe /Create /TN $TaskName /TR $TaskCommand /SC MINUTE /MO $IntervalMinutes /F
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not create scheduled task '$TaskName'."
+}
 
-Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description "Scans E:\App AI and publishes the safe projects dashboard snapshot." -Force | Out-Null
 Write-Host "[+] Installed scheduled task '$TaskName' every $IntervalMinutes minutes." -ForegroundColor Green
 
 if ($RunNow) {

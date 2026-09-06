@@ -5,8 +5,8 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$WorkspaceRoot = (Split-Path -Parent $PSScriptRoot),
-    [string]$OutputPath = (Join-Path $PSScriptRoot "projects_data.js"),
+    [string]$WorkspaceRoot,
+    [string]$OutputPath,
     [switch]$RefreshRemote
 )
 
@@ -14,6 +14,13 @@ param(
 # Git writes advisory warnings to stderr on some repositories; explicit validation below
 # handles scanner failures without treating those advisories as terminating errors.
 $ErrorActionPreference = "Continue"
+
+if ([string]::IsNullOrWhiteSpace($WorkspaceRoot)) {
+    $WorkspaceRoot = Split-Path -Parent $PSScriptRoot
+}
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $OutputPath = Join-Path $PSScriptRoot "projects_data.js"
+}
 
 if (-not (Test-Path -LiteralPath $WorkspaceRoot -PathType Container)) {
     throw "Workspace root does not exist: $WorkspaceRoot"

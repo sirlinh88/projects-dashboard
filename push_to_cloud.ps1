@@ -4,8 +4,12 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$WorkspaceRoot = (Split-Path -Parent $PSScriptRoot)
+    [string]$WorkspaceRoot
 )
+
+if ([string]::IsNullOrWhiteSpace($WorkspaceRoot)) {
+    $WorkspaceRoot = Split-Path -Parent $PSScriptRoot
+}
 
 & (Join-Path $PSScriptRoot "sync_dashboard.ps1") -WorkspaceRoot $WorkspaceRoot
 exit $LASTEXITCODE
