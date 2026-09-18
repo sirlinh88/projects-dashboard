@@ -8,10 +8,10 @@ echo   🚀 MÁY CHỦ BẢNG ĐIỀU KHIỂN REPOSITORY ĐANG KHỞI CHẠY
 echo =======================================================================
 echo.
 echo   📱 Xem trên máy tính này:
-echo      👉 http://localhost:8088/projects_dashboard.html
+echo      👉 http://localhost:8088/index.html
 echo.
 echo   🌐 Xem từ Điện thoại / Laptop khác trong cùng mạng Wi-Fi/LAN:
-echo      👉 http://192.168.1.151:8088/projects_dashboard.html
+echo      👉 http://192.168.1.151:8088/index.html
 echo.
 echo =======================================================================
 echo   ⚡ Tích hợp sẵn API Quét tự động: Bấm nút "Quét lại ngay" trên web

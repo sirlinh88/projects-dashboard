@@ -175,6 +175,31 @@
     }
     .hook-banner-text h3 { font-size: 15px; font-weight: 600; color: #93c5fd; }
     .hook-banner-text p { font-size: 13px; color: #cbd5e1; margin-top: 2px; }
+
+    /* Empty state */
+    .empty-state {
+      grid-column: 1 / -1; text-align: center; padding: 48px 20px;
+      background: var(--card-bg); border: 1px dashed var(--card-border);
+      border-radius: 14px; margin-top: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body { padding: 16px 14px; }
+      .header-title h1 { font-size: 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .stat-card { padding: 14px; }
+      .stat-val { font-size: 24px; }
+      .controls { flex-direction: column; align-items: stretch; }
+      .filter-tabs { width: 100%; overflow-x: auto; padding-bottom: 6px; flex-wrap: nowrap; }
+      .tab-btn { white-space: nowrap; font-size: 13px; padding: 7px 12px; }
+      .search-input { width: 100%; }
+      .projects-grid { grid-template-columns: 1fr; gap: 14px; }
+      .proj-card { padding: 16px; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -228,15 +253,17 @@
       <div class="stat-label">Tiến Độ Trung Bình (Active)</div>
       <div class="stat-val" id="statAvgProgress" style="color: #34d399;">76%</div>
       <div class="stat-desc">Giai đoạn hoàn thiện & tích hợp</div>
+    </div>
+  </div>
 
   <!-- Controls & Filters -->
   <div class="controls">
     <div class="filter-tabs">
-      <button class="tab-btn active" onclick="filterCards('all')">Tất cả (<span id="countAll">11</span>)</button>
-      <button class="tab-btn" onclick="filterCards('active')">Đang phát triển (<span id="countActive">6</span>)</button>
-      <button class="tab-btn" onclick="filterCards('p0p1')">Ưu tiên cao P0/P1 (<span id="countP0P1">4</span>)</button>
-      <button class="tab-btn" id="tabGitBtn" onclick="filterCards('git')">Cần xử lý Git (<span id="countGit">2</span>)</button>
-      <button class="tab-btn" onclick="filterCards('stubs')">Ý tưởng / Dọn dẹp</button>
+      <button class="tab-btn active" onclick="filterCards('all')">Tất cả (<span id="countAll">0</span>)</button>
+      <button class="tab-btn" onclick="filterCards('active')">Đang phát triển (<span id="countActive">0</span>)</button>
+      <button class="tab-btn" onclick="filterCards('p0p1')">Ưu tiên cao P0/P1 (<span id="countP0P1">0</span>)</button>
+      <button class="tab-btn" id="tabGitBtn" onclick="filterCards('git')">Cần xử lý Git (<span id="countGit">0</span>)</button>
+      <button class="tab-btn" onclick="filterCards('stubs')">Ý tưởng / Dọn dẹp (<span id="countStubs">0</span>)</button>
     </div>
     <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm kiếm repository, file, công nghệ..." onkeyup="searchProjects()" />
   </div>
@@ -255,11 +282,11 @@
         <h4 style="color:#38bdf8; font-size:14px; margin-bottom:6px;">1. Trong cùng mạng Wi-Fi / Mạng nội bộ (LAN)</h4>
         <p style="font-size:12.5px; color:#94a3b8; margin-bottom:8px;">Khởi chạy file <code>E:\App AI\start_dashboard_server.bat</code>, sau đó nhập địa chỉ:</p>
         <div style="display:flex; gap:8px; align-items:center;">
-          <input type="text" readonly value="http://192.168.1.151:8088/projects_dashboard.html" id="lanUrlInput" style="flex:1; background:#1e293b; border:1px solid #334155; color:#34d399; font-weight:600; padding:8px 12px; border-radius:6px; font-size:13px; font-family:monospace;" />
+          <input type="text" readonly value="http://192.168.1.151:8088/index.html" id="lanUrlInput" style="flex:1; background:#1e293b; border:1px solid #334155; color:#34d399; font-weight:600; padding:8px 12px; border-radius:6px; font-size:13px; font-family:monospace;" />
           <button onclick="copyLanUrl()" style="background:#0284c7; border:none; color:#fff; padding:8px 14px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:600;">Copy</button>
         </div>
         <div style="text-align:center; margin-top:12px;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://192.168.1.151:8088/projects_dashboard.html" alt="QR Code" style="border-radius:8px; border:2px solid #334155; width:130px; height:130px;" />
+          <img id="lanQrCode" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://192.168.1.151:8088/index.html" alt="QR Code" style="border-radius:8px; border:2px solid #334155; width:130px; height:130px;" />
           <p style="font-size:11.5px; color:#64748b; margin-top:4px;">(Quét bằng camera điện thoại khi cùng Wi-Fi)</p>
         </div>
       </div>
@@ -355,6 +382,7 @@
       let gitAlertCount = 0;
       let progressSum = 0;
       let p0p1Count = 0;
+      let stubsCount = 0;
 
       data.forEach((item, index) => {
         const pubStatus = (window.PUBLIC_STATUS_MAP || {})[item.Name] || {};
@@ -369,6 +397,7 @@
         const effectivePriority = (hasLiveStatus && pubStatus.priority) ? pubStatus.priority : (item.Priority || 'P3');
 
         const isActive = item.Category && item.Category.includes('active');
+        const isStubs = item.Category && item.Category.includes('stubs');
         const hasGitAlert = isPublicDashboard
           ? (!hasLiveStatus && (!item.Category || !item.Category.includes('stubs')))
           : ((item.Uncommitted > 0) || (item.RemoteSync && (item.RemoteSync.includes('Behind') || item.RemoteSync.includes('Ahead'))));
@@ -380,6 +409,7 @@
         }
         if (hasGitAlert) gitAlertCount++;
         if (isP0P1) p0p1Count++;
+        if (isStubs) stubsCount++;
 
         // Card HTML
         const card = document.createElement('div');
@@ -387,6 +417,7 @@
         card.setAttribute('data-category', item.Category || 'stubs');
         card.setAttribute('data-live', hasLiveStatus ? 'true' : 'false');
         card.setAttribute('data-priority', effectivePriority);
+        card.setAttribute('data-gitalert', hasGitAlert ? 'true' : 'false');
 
         let techText = Array.isArray(item.Tech) ? item.Tech.join(' ') : (item.Tech || '');
         let searchableText = (item.Name + ' ' + (publicContext.summary || '') + ' ' + (item.Desc || '') + ' ' + techText + ' ' + effectiveStatus + ' ' + effectiveNextAction).toLowerCase();
@@ -398,9 +429,9 @@
 
         let techTags = '';
         if (Array.isArray(item.Tech)) {
-          techTags = item.Tech.map(t => `<span class="tag">${t}</span>`).join('');
+          techTags = item.Tech.map(t => `<span class="tag">${escapePublicText(t)}</span>`).join('');
         } else if (item.Tech) {
-          techTags = `<span class="tag">${item.Tech}</span>`;
+          techTags = `<span class="tag">${escapePublicText(item.Tech)}</span>`;
         }
 
         let gitHealthHtml = '';
@@ -411,11 +442,16 @@
             gitHealthHtml = '<span class="meta-val" style="color: #94a3b8;">⏳ Chờ GitHub event</span>';
           }
         } else {
-          gitHealthHtml = `<span class="meta-val" style="color: #34d399;">${item.Health}</span>`;
           if (item.Uncommitted > 0) {
             gitHealthHtml = `<span class="meta-val" style="color: #fbbf24;">⚠️ ${item.Uncommitted} file đang sửa</span>`;
           } else if (item.RemoteSync && item.RemoteSync.includes('Behind')) {
             gitHealthHtml = `<span class="meta-val" style="color: #f87171;">⚠️ Behind Remote</span>`;
+          } else if (item.RemoteSync && item.RemoteSync.includes('Ahead')) {
+            gitHealthHtml = `<span class="meta-val" style="color: #38bdf8;">🚀 Cần Push (Ahead)</span>`;
+          } else if (item.Health && item.Health.includes('[OK]')) {
+            gitHealthHtml = `<span class="meta-val" style="color: #34d399;">${escapePublicText(item.Health)}</span>`;
+          } else {
+            gitHealthHtml = `<span class="meta-val" style="color: #94a3b8;">${escapePublicText(item.Health || 'N/A')}</span>`;
           }
         }
 
@@ -427,10 +463,12 @@
             let color = '#fbbf24';
             if (f.startsWith('??')) { icon = '➕'; color = '#34d399'; }
             else if (f.startsWith('D')) { icon = '❌'; color = '#f87171'; }
-            return `<li><span>${icon}</span><span style="color:${color};">${f}</span></li>`;
+            return `<li><span>${icon}</span><span style="color:${color};">${escapePublicText(f)}</span></li>`;
           }).join('');
 
-          let statNote = item.UncommittedStat ? `<div style="color:#94a3b8; font-size:11px; margin-top:4px;">📊 ${item.UncommittedStat}</div>` : '';
+          let statNote = (typeof item.UncommittedStat === 'string' && item.UncommittedStat.trim())
+            ? `<div style="color:#94a3b8; font-size:11px; margin-top:4px;">📊 ${escapePublicText(item.UncommittedStat)}</div>`
+            : '';
 
           wipHtml = `
             <div class="wip-box">
@@ -448,7 +486,7 @@
         if (!isPublicDashboard && item.LastCommitHash) {
           let recentHistoryHtml = '';
           if (Array.isArray(item.RecentCommits) && item.RecentCommits.length > 1) {
-            let historyItems = item.RecentCommits.map(c => `<li><span style="color:#38bdf8;">${c.Hash}</span> (${c.Time}): ${c.Msg}</li>`).join('');
+            let historyItems = item.RecentCommits.map(c => `<li><span style="color:#38bdf8;">${escapePublicText(c.Hash)}</span> (${escapePublicText(c.Time)}): ${escapePublicText(c.Msg)}</li>`).join('');
             recentHistoryHtml = `
               <div id="history_${index}" style="display:none; margin-top:8px; border-top:1px dashed #233354; padding-top:6px;">
                 <div style="font-size:11px; color:#818cf8; margin-bottom:3px;">📜 3 Commit gần nhất:</div>
@@ -458,14 +496,18 @@
             `;
           }
 
+          const commitStatNote = (typeof item.LastCommitStat === 'string' && item.LastCommitStat.trim())
+            ? `<div class="commit-stat">📊 ${escapePublicText(item.LastCommitStat)}</div>`
+            : '';
+
           commitHtml = `
             <div class="commit-box">
               <div class="commit-header">
-                <span>🏷️ Commit gần nhất: <code style="color:#38bdf8;">${item.LastCommitHash}</code></span>
-                <span style="color:#94a3b8; font-size:11px;">${item.LastCommitDate || ''}</span>
+                <span>🏷️ Commit gần nhất: <code style="color:#38bdf8;">${escapePublicText(item.LastCommitHash)}</code></span>
+                <span style="color:#94a3b8; font-size:11px;">${escapePublicText(item.LastCommitDate || '')}</span>
               </div>
-              <div class="commit-msg">💬 ${item.LastCommitMsg}</div>
-              ${item.LastCommitStat ? `<div class="commit-stat">📊 ${item.LastCommitStat}</div>` : ''}
+              <div class="commit-msg">💬 ${escapePublicText(item.LastCommitMsg || 'N/A')}</div>
+              ${commitStatNote}
               ${recentHistoryHtml}
             </div>
           `;
@@ -473,7 +515,8 @@
 
         let quickCmdHtml = '';
         if (!isPublicDashboard && item.QuickCmd) {
-          quickCmdHtml = `<button class="btn-quickstart" onclick="copyCommand('${item.QuickCmd.replace(/'/g, "\\'")}')">📋 Copy: ${item.QuickCmd}</button>`;
+          const safeCmd = escapePublicText(item.QuickCmd);
+          quickCmdHtml = `<button class="btn-quickstart" data-cmd="${safeCmd}" onclick="copyCommand(this.getAttribute('data-cmd'))">📋 Copy: ${safeCmd}</button>`;
         }
 
         let publicContextHtml = '';
@@ -508,7 +551,7 @@
           `;
         } else {
           metaBoxContent = `
-            <div class="meta-item"><span class="meta-key">Git Branch:</span><span class="meta-val" style="color: #38bdf8;">${item.Branch || 'N/A'}</span></div>
+            <div class="meta-item"><span class="meta-key">Git Branch:</span><span class="meta-val" style="color: #38bdf8;">${escapePublicText(item.Branch || 'N/A')}</span></div>
             <div class="meta-item"><span class="meta-key">Git Health:</span>${gitHealthHtml}</div>
           `;
         }
@@ -516,10 +559,10 @@
         card.innerHTML = `
           <div>
             <div class="card-top">
-              <span class="repo-name">${item.Name}</span>
+              <span class="repo-name">${escapePublicText(item.Name)}</span>
               ${getPriorityBadge(effectivePriority)}
             </div>
-            <p class="repo-desc">${isPublicDashboard ? escapePublicText(publicContext.summary) : (item.Desc || '')}</p>
+            <p class="repo-desc">${isPublicDashboard ? escapePublicText(publicContext.summary) : escapePublicText(item.Desc || '')}</p>
             <div class="progress-box">
               <div class="progress-label"><span>Tiến độ hoàn thiện</span><span>${effectiveProgress}%</span></div>
               <div class="progress-bar"><div class="progress-fill" style="width: ${effectiveProgress}%;"></div></div>
@@ -538,11 +581,11 @@
 
             ${!isPublicDashboard && item.Blocker && item.Blocker !== 'Chưa có' && item.Blocker !== 'Trong.' ? `
               <div class="blocker-box">
-                <strong>Điểm nghẽn:</strong> ${item.Blocker}
+                <strong>Điểm nghẽn:</strong> ${escapePublicText(item.Blocker)}
               </div>` : ''}
             ${!isPublicDashboard && item.Action ? `
               <div class="action-box">
-                <strong>Việc tiếp theo:</strong> ${item.Action}
+                <strong>Việc tiếp theo:</strong> ${escapePublicText(item.Action)}
               </div>` : ''}
           </div>
           ${isPublicDashboard ? '' : quickCmdHtml}
@@ -550,22 +593,45 @@
         container.appendChild(card);
       });
 
+      // Empty state message element
+      const emptyMsg = document.createElement('div');
+      emptyMsg.id = 'noResultsMsg';
+      emptyMsg.className = 'empty-state';
+      emptyMsg.style.display = 'none';
+      emptyMsg.innerHTML = `
+        <div style="font-size:32px; margin-bottom:8px;">🔍</div>
+        <div style="font-weight:600; font-size:15px; color:#f8fafc; margin-bottom:4px;">Không tìm thấy repository phù hợp</div>
+        <div style="font-size:13px; color:#94a3b8;">Thử đổi từ khóa tìm kiếm hoặc chọn bộ lọc trạng thái khác.</div>
+      `;
+      container.appendChild(emptyMsg);
+
       // Update counters
-      document.getElementById('statTotal').innerText = total;
-      document.getElementById('statActive').innerText = activeCount;
-      document.getElementById('statGitAlert').innerText = gitAlertCount;
-      document.getElementById('statAvgProgress').innerText = activeCount > 0 ? Math.round(progressSum / activeCount) + '%' : '0%';
+      const statTotalEl = document.getElementById('statTotal');
+      if (statTotalEl) statTotalEl.innerText = total;
+      const statActiveEl = document.getElementById('statActive');
+      if (statActiveEl) statActiveEl.innerText = activeCount;
+      const statGitAlertEl = document.getElementById('statGitAlert');
+      if (statGitAlertEl) statGitAlertEl.innerText = gitAlertCount;
+      const statAvgProgressEl = document.getElementById('statAvgProgress');
+      if (statAvgProgressEl) statAvgProgressEl.innerText = activeCount > 0 ? Math.round(progressSum / activeCount) + '%' : '0%';
 
-      document.getElementById('countAll').innerText = total;
-      document.getElementById('countActive').innerText = activeCount;
-      document.getElementById('countP0P1').innerText = p0p1Count;
-      document.getElementById('countGit').innerText = gitAlertCount;
+      const countAllEl = document.getElementById('countAll');
+      if (countAllEl) countAllEl.innerText = total;
+      const countActiveEl = document.getElementById('countActive');
+      if (countActiveEl) countActiveEl.innerText = activeCount;
+      const countP0P1El = document.getElementById('countP0P1');
+      if (countP0P1El) countP0P1El.innerText = p0p1Count;
+      const countGitEl = document.getElementById('countGit');
+      if (countGitEl) countGitEl.innerText = gitAlertCount;
+      const countStubsEl = document.getElementById('countStubs');
+      if (countStubsEl) countStubsEl.innerText = stubsCount;
 
-      filterCards(currentFilter);
+      updateCardVisibility();
     }
 
     function toggleHistory(elementId, btn) {
       const el = document.getElementById(elementId);
+      if (!el) return;
       if (el.style.display === 'none') {
         el.style.display = 'block';
         btn.innerText = '▲ Thu gọn lịch sử';
@@ -574,6 +640,7 @@
         btn.innerText = '▼ Xem lịch sử commit';
       }
     }
+
     function filterCards(category) {
       currentFilter = category;
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -583,64 +650,86 @@
       });
       if (activeBtn) activeBtn.classList.add('active');
 
-      const isPublic = isPublicMode();
-      const cards = document.querySelectorAll('.proj-card');
-      cards.forEach(card => {
-        const cat = card.getAttribute('data-category') || '';
-        const priority = card.getAttribute('data-priority') || '';
-        const isLive = card.getAttribute('data-live') === 'true';
-
-        if (category === 'all') {
-          card.style.display = 'flex';
-        } else if (category === 'active') {
-          card.style.display = cat.includes('active') ? 'flex' : 'none';
-        } else if (category === 'p0p1') {
-          card.style.display = (priority === 'P0' || priority === 'P1' || cat.includes('p0p1')) ? 'flex' : 'none';
-        } else if (category === 'stubs') {
-          card.style.display = cat.includes('stubs') ? 'flex' : 'none';
-        } else if (category === 'git') {
-          if (isPublic) {
-            card.style.display = (!isLive && !cat.includes('stubs')) ? 'flex' : 'none';
-          } else {
-            const text = card.innerHTML;
-            card.style.display = (text.includes('⚠️') || text.includes('Behind')) ? 'flex' : 'none';
-          }
-        }
-      });
+      updateCardVisibility();
     }
 
     function searchProjects() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
+      updateCardVisibility();
+    }
+
+    function updateCardVisibility() {
+      const searchInput = document.getElementById('searchInput');
+      const q = (searchInput && typeof searchInput.value === 'string' ? searchInput.value : '').toLowerCase().trim();
       const cards = document.querySelectorAll('.proj-card');
+      let visibleCount = 0;
+
       cards.forEach(card => {
-        const text = card.getAttribute('data-name');
-        if (text.includes(q)) {
+        const cat = card.getAttribute('data-category') || '';
+        const priority = card.getAttribute('data-priority') || '';
+        const isGitAlert = card.getAttribute('data-gitalert') === 'true';
+        const text = (card.getAttribute('data-name') || '').toLowerCase();
+
+        let matchesFilter = false;
+        if (currentFilter === 'all') {
+          matchesFilter = true;
+        } else if (currentFilter === 'active') {
+          matchesFilter = cat.includes('active');
+        } else if (currentFilter === 'p0p1') {
+          matchesFilter = (priority === 'P0' || priority === 'P1' || cat.includes('p0p1'));
+        } else if (currentFilter === 'stubs') {
+          matchesFilter = cat.includes('stubs');
+        } else if (currentFilter === 'git') {
+          matchesFilter = isGitAlert;
+        }
+
+        const matchesSearch = !q || text.includes(q);
+
+        if (matchesFilter && matchesSearch) {
           card.style.display = 'flex';
+          visibleCount++;
         } else {
           card.style.display = 'none';
         }
       });
+
+      const emptyMsg = document.getElementById('noResultsMsg');
+      if (emptyMsg) {
+        emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+      }
     }
 
     function copyCommand(cmd) {
+      if (!cmd) return;
       navigator.clipboard.writeText(cmd).then(() => {
-        const toast = document.getElementById('toast');
-        toast.innerText = 'Đã copy: ' + cmd;
-        toast.className = 'show';
-        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2800);
+        showToast('Đã copy: ' + cmd, 2800);
+      }).catch(() => {
+        prompt('Copy lệnh sau:', cmd);
       });
     }
 
     function openLanModal() {
-      document.getElementById('lanModal').style.display = 'flex';
+      const modal = document.getElementById('lanModal');
+      const input = document.getElementById('lanUrlInput');
+      const qr = document.getElementById('lanQrCode');
+      const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const currentHost = (window.location.host && !isLocalHost) ? window.location.host : '192.168.1.151:8088';
+      const lanUrl = `http://${currentHost}/index.html`;
+      if (input) input.value = lanUrl;
+      if (qr) qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(lanUrl)}`;
+      if (modal) modal.style.display = 'flex';
     }
     function closeLanModal() {
-      document.getElementById('lanModal').style.display = 'none';
+      const modal = document.getElementById('lanModal');
+      if (modal) modal.style.display = 'none';
     }
     function copyLanUrl() {
-      const url = document.getElementById('lanUrlInput').value;
+      const input = document.getElementById('lanUrlInput');
+      const url = input ? input.value : '';
+      if (!url) return;
       navigator.clipboard.writeText(url).then(() => {
-        alert('Đã copy: ' + url);
+        showToast('✅ Đã copy URL: ' + url, 3000);
+      }).catch(() => {
+        prompt('Copy địa chỉ sau:', url);
       });
     }
 

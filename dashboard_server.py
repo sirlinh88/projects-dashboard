@@ -77,7 +77,7 @@ class DashboardRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith("/api/"):
             self.send_error(405, "Dashboard APIs accept POST only")
-        elif self.path == "/" or self.path == "":
+        elif self.path.split("?")[0] in ("/", "", "/projects_dashboard.html"):
             self.send_response(302)
             self.send_header("Location", "/index.html")
             self.end_headers()
