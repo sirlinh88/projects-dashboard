@@ -7,8 +7,7 @@ import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
-
+from typing import Any
 
 ALLOWED_PROJECTS = {
     "AI-STock",
@@ -57,7 +56,7 @@ def validate_timestamp(value: str) -> str:
     return parsed.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def load_yaml_status(path: Path) -> Dict[str, Any]:
+def load_yaml_status(path: Path) -> dict[str, Any]:
     if not path.is_file():
         raise FileNotFoundError(f"Status file not found: {path}")
 
@@ -73,7 +72,7 @@ def load_yaml_status(path: Path) -> Dict[str, Any]:
         pass
 
     # Built-in fallback parser for simple key-value YAML
-    data: Dict[str, Any] = {}
+    data: dict[str, Any] = {}
     for line_num, line in enumerate(content.splitlines(), start=1):
         line = line.strip()
         if not line or line.startswith("#"):
@@ -92,14 +91,15 @@ def load_yaml_status(path: Path) -> Dict[str, Any]:
     return data
 
 
-def validate_status_data(data: Dict[str, Any]) -> Dict[str, Any]:
-    allowed_keys = {"status", "next_action", "progress", "priority"}
+def validate_status_data(data: dict[str, Any]) -> dict[str, Any]:
+    required_keys = {"status", "next_action", "progress", "priority"}
+    allowed_keys = required_keys | {"completed"}
     if not isinstance(data, dict):
-        raise ValueError("Status content must be a mapping/dictionary")
+        raise TypeError("Status content must be a mapping/dictionary")
 
     actual_keys = set(data.keys())
-    if actual_keys != allowed_keys:
-        missing = allowed_keys - actual_keys
+    if not required_keys <= actual_keys or not actual_keys <= allowed_keys:
+        missing = required_keys - actual_keys
         extra = actual_keys - allowed_keys
         errors = []
         if missing:
@@ -122,9 +122,18 @@ def validate_status_data(data: Dict[str, Any]) -> Dict[str, Any]:
     if len(next_action) > 200:
         raise ValueError(f"Field 'next_action' too long ({len(next_action)} chars, max 200)")
 
+    has_completed = "completed" in data
+    completed = data.get("completed")
+    if has_completed:
+        if not isinstance(completed, str) or not completed.strip():
+            raise ValueError("Field 'completed' must be a non-empty string")
+        completed = completed.strip()
+        if len(completed) > 200:
+            raise ValueError(f"Field 'completed' too long ({len(completed)} chars, max 200)")
+
     raw_progress = data.get("progress")
     if isinstance(raw_progress, bool) or not isinstance(raw_progress, (int, float, str)):
-        raise ValueError("Field 'progress' must be an integer between 0 and 100")
+        raise TypeError("Field 'progress' must be an integer between 0 and 100")
     try:
         progress = int(raw_progress)
     except (ValueError, TypeError):
@@ -137,17 +146,20 @@ def validate_status_data(data: Dict[str, Any]) -> Dict[str, Any]:
         raise ValueError(f"Field 'priority' must be one of {sorted(ALLOWED_PRIORITIES)} (got '{priority}')")
 
     # Prohibited pattern scan
-    for field_name, value in [("status", status), ("next_action", next_action)]:
+    for field_name, value in [("status", status), ("next_action", next_action), ("completed", completed or "")]:
         for pattern, desc in PROHIBITED_PATTERNS:
             if re.search(pattern, value, re.IGNORECASE):
                 raise ValueError(f"Field '{field_name}' contains prohibited {desc}: '{value}'")
 
-    return {
+    result = {
         "status": status,
         "nextAction": next_action,
         "progress": progress,
         "priority": priority,
     }
+    if has_completed:
+        result["completed"] = completed
+    return result
 
 
 def main() -> None:
@@ -178,10 +190,7 @@ def main() -> None:
     document["repositories"][args.project] = {
         "state": "updated",
         "updatedAt": updated_at,
-        "status": validated["status"],
-        "nextAction": validated["nextAction"],
-        "progress": validated["progress"],
-        "priority": validated["priority"],
+        **validated,
     }
     document["generatedAt"] = updated_at
     args.file.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

@@ -363,6 +363,7 @@
 
         // Dynamic values prioritize public_status.json; fallback to public_catalog.js / projects_data.js
         const effectiveStatus = (hasLiveStatus && pubStatus.status) ? pubStatus.status : (publicContext.status || '');
+        const effectiveCompleted = (hasLiveStatus && pubStatus.completed) ? pubStatus.completed : (publicContext.completed || '');
         const effectiveNextAction = (hasLiveStatus && pubStatus.nextAction) ? pubStatus.nextAction : (publicContext.nextAction || '');
         const effectiveProgress = (hasLiveStatus && typeof pubStatus.progress === 'number') ? pubStatus.progress : (item.Progress || 0);
         const effectivePriority = (hasLiveStatus && pubStatus.priority) ? pubStatus.priority : (item.Priority || 'P3');
@@ -478,7 +479,7 @@
         let publicContextHtml = '';
         if (isPublicDashboard) {
           const badgeLive = hasLiveStatus
-            ? '<span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.4); padding: 1px 6px; border-radius: 4px; margin-left: 6px;">LIVE</span>'
+            ? '<span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.4); padding: 1px 6px; border-radius: 4px; margin-left: 6px;">GITHUB</span>'
             : '<span style="font-size: 10px; color: #94a3b8; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.3); padding: 1px 6px; border-radius: 4px; margin-left: 6px;">CATALOG</span>';
 
           publicContextHtml = `
@@ -486,9 +487,12 @@
               <div class="blocker-box" style="border-left-color: #38bdf8; color: #e2e8f0; background: rgba(56, 189, 248, 0.08);">
                 <strong style="color: #38bdf8;">Trạng thái dự án:</strong> ${escapePublicText(effectiveStatus)}${badgeLive}
               </div>` : ''}
+            <div class="blocker-box" style="border-left-color: #34d399; color: #e2e8f0; background: rgba(52, 211, 153, 0.08);">
+              <strong style="color: #34d399;">Đã triển khai:</strong> ${escapePublicText(effectiveCompleted || 'Chưa cập nhật nội dung đã triển khai.')}
+            </div>
             ${effectiveNextAction ? `
               <div class="action-box">
-                <strong>Việc cần triển khai:</strong> ${escapePublicText(effectiveNextAction)}
+                <strong>Cần triển khai tiếp:</strong> ${escapePublicText(effectiveNextAction)}
               </div>` : ''}
           `;
         }

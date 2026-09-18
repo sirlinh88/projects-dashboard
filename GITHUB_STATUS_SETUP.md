@@ -6,17 +6,19 @@ Tài liệu hướng dẫn chuẩn hóa file trạng thái, bảo mật GitHub S
 
 ## 1. Chuẩn hóa File Trạng thái (.dashboard/status.yml)
 
-Mỗi repository nguồn cần duy trì file `.dashboard/status.yml` tại thư mục gốc với đúng 4 trường sau:
+Mỗi repository nguồn duy trì file `.dashboard/status.yml` tại thư mục gốc. Bốn trường cũ vẫn bắt buộc; thêm `completed` để tóm tắt phần đã xây dựng hoặc kiểm chứng:
 
 ```yaml
 status: "Đang kiểm thử tích hợp"
+completed: "Đã xây dựng chức năng chính và kiểm tra luồng nội bộ"
 next_action: "Chạy UAT và chuẩn bị triển khai"
 progress: 80
 priority: P1
 ```
 
 ### Quy tắc an toàn bắt buộc:
-- **Chỉ cho phép 4 trường:** `status`, `next_action`, `progress`, `priority`. Mọi trường bổ sung khác sẽ bị hệ thống từ chối (fail workflow).
+- **Chỉ cho phép 5 trường:** `status`, `completed`, `next_action`, `progress`, `priority`. `completed` có thể vắng mặt ở repo chưa cập nhật; mọi trường khác sẽ bị từ chối.
+- **`completed`**: Một câu về chức năng đã xây dựng hoặc bước đã kiểm chứng (tối đa 200 ký tự). Không gọi một bước là đã triển khai production nếu chưa có bằng chứng production.
 - **`status`**: Chuỗi mô tả ngắn gọn trạng thái hiện tại (tối đa 200 ký tự).
 - **`next_action`**: Chuỗi mô tả hành động triển khai tiếp theo (tối đa 200 ký tự).
 - **`progress`**: Số nguyên từ `0` đến `100` thể hiện phần trăm hoàn thiện.
@@ -87,6 +89,7 @@ Dữ liệu trạng thái công khai được lưu tại `public_status.json` tr
   "state": "updated",
   "updatedAt": "2026-09-06T08:00:00Z",
   "status": "Đang kiểm thử tích hợp",
+  "completed": "Đã xây dựng chức năng chính và kiểm tra luồng nội bộ",
   "nextAction": "Chạy UAT và chuẩn bị triển khai",
   "progress": 80,
   "priority": "P1"
@@ -94,8 +97,10 @@ Dữ liệu trạng thái công khai được lưu tại `public_status.json` tr
 ```
 
 Đây là nguồn trạng thái động công khai duy nhất được xuất bản lên GitHub Pages.
-- Repository đã có event: hiển thị dữ liệu thời gian thực từ `public_status.json`.
+- Repository đã có event: hiển thị bản trạng thái đã xuất bản gần nhất từ `public_status.json`, kèm thời điểm nhận.
 - Repository chưa có event đầu tiên: hiển thị fallback từ `public_catalog.js`.
+- Trường `completed` chưa có ở bản ghi cũ sẽ hiện "Chưa cập nhật nội dung đã triển khai" cho đến khi repo nguồn xuất bản lại.
+- GitHub Pages chỉ nhận bốn file đã duyệt trong artifact. Bước build từ chối `projects_data.js` nếu có tên máy, dữ liệu Git cục bộ hoặc trường ngoài metadata công khai.
 
 ---
 
@@ -109,7 +114,7 @@ Dữ liệu trạng thái công khai được lưu tại `public_status.json` tr
 3. **Kiểm tra GitHub Pages**:
    - Mở `https://sirlinh88.github.io/projects-dashboard/`.
    - Bấm nút **🔄 Quét GitHub** để làm mới dữ liệu.
-   - Kiểm tra trạng thái hiển thị đúng huy hiệu `LIVE`.
+   - Kiểm tra trạng thái hiển thị huy hiệu `GITHUB`, phần đã triển khai và việc cần làm tiếp.
    - Xác minh trang không chứa commit hash, SHA, tên branch, đường dẫn thư mục cục bộ hay danh sách tệp sửa dở.
 
 ---
