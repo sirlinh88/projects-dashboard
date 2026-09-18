@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-18T01:36:27Z",
+  "generatedAt": "2026-09-18T01:36:35Z",
   "repositories": {
     "AI-STock": {
       "state": "updated",
@@ -37,11 +37,12 @@
     },
     "Mini-app-QLDA": {
       "state": "updated",
-      "updatedAt": "2026-09-06T08:00:00Z",
+      "updatedAt": "2026-09-18T01:36:35Z",
       "status": "Đang phát triển và tích hợp dữ liệu dự án",
       "nextAction": "Kiểm thử các luồng xác thực và giao diện quản lý",
       "progress": 70,
-      "priority": "P0"
+      "priority": "P0",
+      "completed": "Đã xây dựng API, Web và Zalo Mini App; baseline vận hành staging đã có bằng chứng kiểm thử."
     },
     "Smart": {
       "state": "updated",
