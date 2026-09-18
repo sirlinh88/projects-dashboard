@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-18T02:27:41Z",
+  "generatedAt": "2026-09-18T02:30:38Z",
   "repositories": {
     "AI-STock": {
       "state": "updated",
@@ -54,12 +54,12 @@
     },
     "SmartDoc-UIpath": {
       "state": "updated",
-      "updatedAt": "2026-09-18T02:27:41Z",
-      "status": "Đang kiểm thử tích hợp template",
-      "nextAction": "Chạy UAT và chuẩn bị đóng gói",
+      "updatedAt": "2026-09-18T02:30:38Z",
+      "status": "Đã hợp nhất Word Add-in, Auditor và baseline D0; chuẩn bị D1",
+      "nextAction": "Triển khai D1: thống nhất giá trị nhập, kiểm tra token DOCX và báo kết quả từng văn bản; sau đó kiểm thử trên Word thật.",
       "progress": 80,
       "priority": "P0",
-      "completed": "Đã xây dựng luồng sinh văn bản từ mẫu và Word Add-in; Task Pane đã được kiểm tra trên Word 2016."
+      "completed": "Đã xây dựng Word Add-in, luồng tạo mẫu, Auditor giai đoạn 0-2 và baseline D0; bộ kiểm thử tích hợp đạt 124 ca."
     },
     "Zalo-work-hub": {
       "state": "updated",
